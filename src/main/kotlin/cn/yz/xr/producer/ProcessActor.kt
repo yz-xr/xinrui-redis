@@ -1,4 +1,4 @@
-package producer
+package cn.yz.xr.producer
 
 import akka.actor.typed.Behavior
 import akka.actor.typed.javadsl.AbstractBehavior

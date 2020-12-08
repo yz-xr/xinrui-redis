@@ -1,4 +1,4 @@
-package producer
+package cn.yz.xr.producer
 
 import akka.actor.typed.ActorSystem
 import cn.yz.xr.common.Command
