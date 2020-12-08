@@ -3,6 +3,7 @@ package cn.yz.xr.producer
 import akka.actor.typed.ActorRef
 import akka.actor.typed.ActorSystem
 import cn.yz.xr.common.Command
+import cn.yz.xr.producer.ManagerActor
 
 
 fun main(args:Array<String>){

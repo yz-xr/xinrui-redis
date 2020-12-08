@@ -7,7 +7,6 @@ import akka.actor.typed.javadsl.ActorContext
 import akka.actor.typed.javadsl.Behaviors
 import akka.actor.typed.javadsl.Receive
 import cn.yz.xr.common.Command
-import cn.yz.xr.producer.ProcessActor
 
 class ManagerActor(
         context: ActorContext<Any>,
