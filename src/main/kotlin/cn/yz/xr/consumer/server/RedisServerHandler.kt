@@ -1,6 +1,9 @@
 package cn.yz.xr.consumer.server
 
 import cn.hutool.core.util.CharsetUtil
+import cn.yz.xr.ApplicationMain
+import cn.yz.xr.common.Command
+import cn.yz.xr.common.RMessage
 import io.netty.buffer.ByteBufUtil
 import io.netty.channel.ChannelDuplexHandler
 import io.netty.channel.ChannelHandlerContext
@@ -9,6 +12,8 @@ import io.netty.handler.codec.redis.ArrayRedisMessage
 import io.netty.handler.codec.redis.FullBulkStringRedisMessage
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.util.*
+import kotlin.collections.HashMap
 
 class RedisServerHandler : ChannelDuplexHandler() {
 
@@ -23,20 +28,32 @@ class RedisServerHandler : ChannelDuplexHandler() {
     override fun channelRead(ctx: ChannelHandlerContext, msg: Any?) {
         logger.info("服务器收到的消息: {}", msg)
         val message: ArrayRedisMessage = msg as ArrayRedisMessage
-        val response = printAggregatedRedisResponseRequest(message)
-        // val response2 = invokeAkka(message)
+        // val response = printAggregatedRedisResponseRequest(message)
+        invokeAkka(ctx, message)
 
-        logger.info("服务器返回结果: {}", response)
-        val fullBulkStringRedisMessage = FullBulkStringRedisMessage(ByteBufUtil.writeUtf8(ctx.alloc(), response.toString()))
-        ctx.writeAndFlush(fullBulkStringRedisMessage)
+        // logger.info("服务器返回结果: {}", response)
+        // val fullBulkStringRedisMessage = FullBulkStringRedisMessage(ByteBufUtil.writeUtf8(ctx.alloc(), response.toString()))
+        // ctx.writeAndFlush(fullBulkStringRedisMessage)
     }
 
     /**
      * 调用 Akka
      */
-    private fun invokeAkka(message: ArrayRedisMessage): Any {
-        // ApplicationMain.managerActor
-        return ""
+    private fun invokeAkka(ctx: ChannelHandlerContext, message: ArrayRedisMessage) {
+        val command = (message.children()[0] as FullBulkStringRedisMessage).content().toString(CharsetUtil.CHARSET_UTF_8)
+        println("command: $command")
+
+        when(command) {
+            "COMMAND" -> {
+                val fullBulkStringRedisMessage = FullBulkStringRedisMessage(ByteBufUtil.writeUtf8(ctx.alloc(), "ok"))
+                ctx.writeAndFlush(fullBulkStringRedisMessage)
+            }
+            else -> {
+                val dispatcherActor = ApplicationMain.managerActor
+                val redisCommand = RMessage(command, message, ctx)
+                dispatcherActor.tell(redisCommand)
+            }
+        }
     }
 
     /**
