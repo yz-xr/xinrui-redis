@@ -1,6 +1,6 @@
-package cn.yz.xr.common
+package cn.yz.xr.common.entity
 
-class Rset(
+class RSet(
     var rset: HashMap<String,Set<String>> = hashMapOf(),
     var operationList: List<String> = listOf("")
 ){

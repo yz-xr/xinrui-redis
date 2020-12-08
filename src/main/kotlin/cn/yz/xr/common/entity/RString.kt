@@ -1,6 +1,6 @@
-package cn.yz.xr.common
+package cn.yz.xr.common.entity
 
-class Rstring(
+class RString(
     var map: LinkedHashMap<String,String> = linkedMapOf(),
     var operationList: List<String> = listOf("SET","GET","SETNX")
 ){

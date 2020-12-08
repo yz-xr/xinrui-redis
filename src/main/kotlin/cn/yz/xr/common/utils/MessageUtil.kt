@@ -1,10 +1,10 @@
-package cn.yz.xr.common
+package cn.yz.xr.common.utils
 
 import cn.hutool.core.util.CharsetUtil
 import io.netty.handler.codec.redis.ArrayRedisMessage
 import io.netty.handler.codec.redis.FullBulkStringRedisMessage
 
-open class Util{
+open class MessageUtil{
     companion object{
         open fun convertToArray(content: ArrayRedisMessage):List<String>{
             var childs = content.children()

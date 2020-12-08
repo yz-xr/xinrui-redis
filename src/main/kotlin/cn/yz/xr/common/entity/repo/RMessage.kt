@@ -1,17 +1,15 @@
-package cn.yz.xr.common
+package cn.yz.xr.common.entity.repo
 
-import io.netty.channel.Channel
 import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.redis.ArrayRedisMessage
-
-
 
 /**
  * Redis server 与 akka 交互数据结构
  *
  * command : 命令
- * kv ：键值map
+ * content ：ArrayRedisMessage
  * socketChannel : netty通道
+ * timeStamp : System.currentTimeMillis()
  */
 data class RMessage(
         val command: String,

@@ -7,7 +7,6 @@ import akka.actor.typed.javadsl.ActorContext
 import akka.actor.typed.javadsl.Behaviors
 import akka.actor.typed.javadsl.Receive
 import cn.hutool.core.util.CharsetUtil
-import cn.yz.xr.common.Command
 import cn.yz.xr.common.RMessage
 import io.netty.handler.codec.redis.FullBulkStringRedisMessage
 

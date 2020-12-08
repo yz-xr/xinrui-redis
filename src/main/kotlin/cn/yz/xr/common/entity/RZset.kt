@@ -1,6 +1,6 @@
-package cn.yz.xr.common
+package cn.yz.xr.common.entity
 
-class ZSet(
+class RZset(
     var zSet: Any,
     var operationList: List<String> = listOf("ZADD")
 ){

@@ -1,6 +1,6 @@
-package common
+package cn.yz.xr.common.entity
 
-class Common(
+class RCommon(
         var operationList:List<String> = listOf("KEYS")
 ){
 

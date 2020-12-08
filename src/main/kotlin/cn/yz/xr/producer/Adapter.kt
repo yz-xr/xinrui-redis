@@ -1,9 +1,5 @@
 package cn.yz.xr.producer
 
-import akka.actor.typed.ActorSystem
-import cn.yz.xr.common.Command
-import java.util.*
-
 
 fun main(args: Array<String>){
 //    val demoMain: ActorSystem<Any> = ActorSystem.create(ManagerActor.create(10), "ManagerActor")

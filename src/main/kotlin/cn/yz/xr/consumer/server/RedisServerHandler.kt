@@ -2,8 +2,7 @@ package cn.yz.xr.consumer.server
 
 import cn.hutool.core.util.CharsetUtil
 import cn.yz.xr.ApplicationMain
-import cn.yz.xr.common.Command
-import cn.yz.xr.common.RMessage
+import cn.yz.xr.common.entity.repo.RMessage
 import io.netty.buffer.ByteBufUtil
 import io.netty.channel.ChannelDuplexHandler
 import io.netty.channel.ChannelHandlerContext
@@ -12,7 +11,6 @@ import io.netty.handler.codec.redis.ArrayRedisMessage
 import io.netty.handler.codec.redis.FullBulkStringRedisMessage
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.util.*
 import kotlin.collections.HashMap
 
 class RedisServerHandler : ChannelDuplexHandler() {
@@ -41,8 +39,7 @@ class RedisServerHandler : ChannelDuplexHandler() {
      */
     private fun invokeAkka(ctx: ChannelHandlerContext, message: ArrayRedisMessage) {
         val command = (message.children()[0] as FullBulkStringRedisMessage).content().toString(CharsetUtil.CHARSET_UTF_8)
-        println("command: $command")
-
+        // println("command: $command")
         when(command) {
             "COMMAND" -> {
                 val fullBulkStringRedisMessage = FullBulkStringRedisMessage(ByteBufUtil.writeUtf8(ctx.alloc(), "ok"))

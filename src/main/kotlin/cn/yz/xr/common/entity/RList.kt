@@ -1,6 +1,6 @@
-package cn.yz.xr.common
+package cn.yz.xr.common.entity
 
-class Rlist(
+class RList(
     var list: Map<String,List<String>> = mapOf(),
     var operationList: List<String> = listOf("LSET","LGET","LSETNX")
 ){

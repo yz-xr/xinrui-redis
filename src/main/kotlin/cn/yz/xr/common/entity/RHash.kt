@@ -1,6 +1,6 @@
-package cn.yz.xr.common
+package cn.yz.xr.common.entity
 
-class Rhash(
+class RHash(
     var hash: LinkedHashMap<String, String> = linkedMapOf(),
     val operationList: List<String> = listOf("HSET","HGET")
 ){

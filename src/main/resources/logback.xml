@@ -1,9 +1,3 @@
-<!-- 级别从高到低 OFF 、 FATAL 、 ERROR 、 WARN 、 INFO 、 DEBUG 、 TRACE 、 ALL -->
-<!-- 日志输出规则 根据当前ROOT 级别，日志输出时，级别高于root默认的级别时 会输出 -->
-<!-- 以下 每个配置的 filter 是过滤掉输出文件里面，会出现高级别文件，依然出现低级别的日志信息，通过filter 过滤只记录本级别的日志 -->
-<!-- scan 当此属性设置为true时，配置文件如果发生改变，将会被重新加载，默认值为true。 -->
-<!-- scanPeriod 设置监测配置文件是否有修改的时间间隔，如果没有给出时间单位，默认单位是毫秒。当scan为true时，此属性生效。默认的时间间隔为1分钟。 -->
-<!-- debug 当此属性设置为true时，将打印出logback内部日志信息，实时查看logback运行状态。默认值为false。 -->
 <configuration scan="true" scanPeriod="60 seconds" debug="false">
     <!-- 动态日志级别 -->
     <jmxConfigurator/>
@@ -12,13 +6,13 @@
     <!-- 日志最大的历史 30天 -->
     <property name="maxHistory" value="30"/>
 
-    <!-- ConsoleAppender 控制台输出日志 -->
-    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
-            <pattern>
-                <!-- 设置日志输出格式 -->
-                %d{yyyy-MM-dd HH:mm:ss.SSS} %-5level %logger - %msg%n
-            </pattern>
+    <property name="CONSOLE_LOG_PATTERN"
+              value="%red(%date{yyyy-MM-dd HH:mm:ss}) %highlight(%-5level) %red([%thread]) %boldMagenta(%logger{50}) %cyan(%msg%n)"/>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <!-- encoder class为空时, 默认也为 ch.qos.logback.classic.encoder.PatternLayoutEncoder -->
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
         </encoder>
     </appender>
 
@@ -26,7 +20,7 @@
     <!-- 滚动记录文件，先将日志记录到指定文件，当符合某个条件时，将日志记录到其他文件 RollingFileAppender -->
     <appender name="ERROR" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <!-- 过滤器，只记录WARN级别的日志 -->
-        <!-- 果日志级别等于配置级别，过滤器会根据onMath 和 onMismatch接收或拒绝日志。 -->
+        <!-- 如果日志级别等于配置级别，过滤器会根据onMath 和 onMismatch接收或拒绝日志。 -->
         <filter class="ch.qos.logback.classic.filter.LevelFilter">
             <!-- 设置过滤级别 -->
             <level>ERROR</level>
@@ -127,7 +121,7 @@
         <!-- 打印debug级别日志及以上级别日志 -->
         <level value="debug"/>
         <!-- 控制台输出 -->
-        <appender-ref ref="console"/>
+        <appender-ref ref="STDOUT"/>
         <!-- 文件输出 -->
         <appender-ref ref="ERROR"/>
         <appender-ref ref="INFO"/>

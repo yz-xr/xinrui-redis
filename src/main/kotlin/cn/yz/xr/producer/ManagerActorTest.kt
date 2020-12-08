@@ -1,22 +1,18 @@
 package cn.yz.xr.producer
 
-import akka.actor.typed.ActorRef
 import akka.actor.typed.Behavior
 import akka.actor.typed.javadsl.AbstractBehavior
 import akka.actor.typed.javadsl.ActorContext
 import akka.actor.typed.javadsl.Behaviors
 import akka.actor.typed.javadsl.Receive
 import cn.hutool.core.util.CharsetUtil
-import cn.yz.xr.common.Command
-import cn.yz.xr.common.RMessage
+import cn.yz.xr.common.entity.repo.RMessage
 import io.netty.buffer.ByteBufUtil
 import io.netty.handler.codec.redis.FullBulkStringRedisMessage
 
 class ManagerActorTest(
         context: ActorContext<Any>,
-        private val max: Int,
-        private var childArray: ArrayList<ActorRef<Command>> = arrayListOf(),
-        private var response: String = ""
+        private val max: Int
 ) : AbstractBehavior<Any>(context) {
 
     private val stringMap: MutableMap<Any, Any> = HashMap()
