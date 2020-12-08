@@ -13,7 +13,7 @@ import io.netty.handler.codec.redis.RedisEncoder
 import io.netty.util.concurrent.GenericFutureListener
 import java.io.BufferedReader
 import java.io.InputStreamReader
-
+import kotlin.jvm.Throws
 
 class RedisClientApp {
 

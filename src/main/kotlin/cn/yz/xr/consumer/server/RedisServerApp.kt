@@ -13,6 +13,7 @@ import io.netty.handler.codec.redis.RedisDecoder
 import io.netty.handler.codec.redis.RedisEncoder
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import kotlin.jvm.Throws
 
 class RedisServerApp {
 
