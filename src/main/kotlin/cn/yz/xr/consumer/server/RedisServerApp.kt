@@ -1,5 +1,6 @@
 package cn.yz.xr.consumer.server
 
+import cn.yz.xr.ApplicationMain
 import io.netty.bootstrap.ServerBootstrap
 import io.netty.channel.ChannelInitializer
 import io.netty.channel.EventLoopGroup
@@ -31,15 +32,11 @@ class RedisServerApp {
             })
 
             serverBootstrap.channel(NioServerSocketChannel::class.java)
-            val channelFuture = serverBootstrap.bind(port).sync()
+            val channelFuture = serverBootstrap.bind(ApplicationMain.port).sync()
             println("服务器启动成功！")
             channelFuture.channel().closeFuture().sync()
         } finally {
             group.shutdownGracefully()
         }
-    }
-
-    companion object {
-        const val port: Int = 6379
     }
 }

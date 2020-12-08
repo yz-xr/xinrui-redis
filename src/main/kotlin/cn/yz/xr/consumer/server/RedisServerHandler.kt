@@ -7,9 +7,12 @@ import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelPromise
 import io.netty.handler.codec.redis.ArrayRedisMessage
 import io.netty.handler.codec.redis.FullBulkStringRedisMessage
-import io.netty.handler.codec.redis.RedisMessage
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 class RedisServerHandler : ChannelDuplexHandler() {
+
+    private val logger: Logger = LoggerFactory.getLogger(RedisServerHandler::class.java)
 
     private val stringMap: MutableMap<Any, Any> = HashMap()
 
@@ -18,12 +21,12 @@ class RedisServerHandler : ChannelDuplexHandler() {
      */
     @Throws(Exception::class)
     override fun channelRead(ctx: ChannelHandlerContext, msg: Any?) {
-        println("服务器收到的消息：$msg")
+        logger.info("服务器收到的消息: {}", msg)
         val message: ArrayRedisMessage = msg as ArrayRedisMessage
         val response = printAggregatedRedisResponseRequest(message)
         // val response2 = invokeAkka(message)
 
-        println("服务器返回结果：${response}")
+        logger.info("服务器返回结果: {}", response)
         val fullBulkStringRedisMessage = FullBulkStringRedisMessage(ByteBufUtil.writeUtf8(ctx.alloc(), response.toString()))
         ctx.writeAndFlush(fullBulkStringRedisMessage)
     }
@@ -32,6 +35,7 @@ class RedisServerHandler : ChannelDuplexHandler() {
      * 调用 Akka
      */
     private fun invokeAkka(message: ArrayRedisMessage): Any {
+        // ApplicationMain.managerActor
         return ""
     }
 
@@ -61,7 +65,8 @@ class RedisServerHandler : ChannelDuplexHandler() {
      * 处理异常情况
      */
     override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
-        cause.printStackTrace()
+        //cause.printStackTrace()
+        logger.warn("client close ungracefully：{}", cause.message)
         ctx.close()
     }
 
@@ -73,7 +78,7 @@ class RedisServerHandler : ChannelDuplexHandler() {
      * 首次建立连接时返回消息
      */
     override fun channelActive(ctx: ChannelHandlerContext) {
-        println("连接的客户端地址：${ctx.channel().remoteAddress()}")
+        logger.info("连接的客户端地址: {}", ctx.channel().remoteAddress())
         super.channelActive(ctx)
     }
 
