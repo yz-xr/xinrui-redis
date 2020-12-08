@@ -7,7 +7,7 @@ import akka.actor.typed.javadsl.ActorContext
 import akka.actor.typed.javadsl.Behaviors
 import akka.actor.typed.javadsl.Receive
 import cn.hutool.core.util.CharsetUtil
-import cn.yz.xr.common.RMessage
+import cn.yz.xr.common.entity.repo.RMessage
 import io.netty.handler.codec.redis.FullBulkStringRedisMessage
 
 class ManagerActor(
@@ -15,50 +15,49 @@ class ManagerActor(
         private val max: Int,
         private var childArray: ArrayList<ActorRef<RMessage>> = arrayListOf(),
         private var response: String = ""
-) : AbstractBehavior<Any>(context){
+) : AbstractBehavior<Any>(context) {
 
     init {
-        for (i in 0..max){
+        for (i in 0..max) {
             this.childArray.add(i, context.spawn(ProcessActor.create(), "ProcessActor-${i}"))
         }
     }
 
-    companion object{
-        fun create(max:Int): Behavior<Any> {
-            return Behaviors.setup{
-                    context: ActorContext<Any> ->
-                ManagerActor(context,max)
+    companion object {
+        fun create(max: Int): Behavior<Any> {
+            return Behaviors.setup { context: ActorContext<Any> ->
+                ManagerActor(context, max)
             }
         }
     }
 
     override fun createReceive(): Receive<Any> {
         return newReceiveBuilder()
-            .onMessage<String>(
-                String::class.java
-            ){message: String -> this.returnRes(message) }
+                .onMessage<String>(
+                        String::class.java
+                ) { message: String -> this.returnRes(message) }
                 .onMessage<RMessage>(
                         RMessage::class.java
                 ) { message: RMessage -> this.onCommand(message) }
-            .build()
+                .build()
     }
 
     // 接受command命令，并分配给子actor处理
-    private fun onCommand(message: RMessage):Behavior<Any>{
-        val (_,content, _, _) = message
-        val key = (content.children()[0] as FullBulkStringRedisMessage).content().toString(CharsetUtil.CHARSET_UTF_8)
+    private fun onCommand(message: RMessage): Behavior<Any> {
+        val (_, content, _, _) = message
+        val key = (content.children()[1] as FullBulkStringRedisMessage).content().toString(CharsetUtil.CHARSET_UTF_8)
         childArray[key.hashCode() % max].tell(message)
         return this
     }
 
     // 接受子actor的s值返回
-    private fun returnRes(response: String):Behavior<Any> {
+    private fun returnRes(response: String): Behavior<Any> {
         this.response = response
         println(response)
         return this
     }
 
-    fun getChildrenArray():ArrayList<ActorRef<RMessage>>{
+    fun getChildrenArray(): ArrayList<ActorRef<RMessage>> {
         return this.childArray
     }
 
