@@ -1,5 +1,8 @@
 package cn.yz.xr.common.entity
 
+import io.netty.handler.codec.redis.ErrorRedisMessage
+import io.netty.handler.codec.redis.RedisMessage
+
 class RString(
     var map: LinkedHashMap<String,String> = linkedMapOf(),
     var operationList: List<String> = listOf("SET","GET","SETNX")
@@ -74,18 +77,23 @@ class RString(
         }
     }
 
-    fun operation(command: String, array: List<String>):String{
-        return when(command){
-            "GET" -> get(array[1])
-            "SET" -> set(array[1], array[2])
-            "SETNX" -> setnx(array[1], array[2])
-            "GETSET" -> getset(array[1], array[2])
-            "STRLEN" -> strlen(array[1])
-            "APPEND" -> append(array[1], array[2])
-            "SETRANGE" -> setrange(array[1],array[2].toInt()?:0,array[3])
-            "INCR" -> incr(array[1])
-            "getrange" -> getrange(array[1],array[2].toInt(),array[3].toInt())
-            else -> "not supported command"
-        }
+    fun operation(command: String, array: List<String>):RedisMessage{
+
+        return ErrorRedisMessage("")
     }
+
+//    fun operation(command: String, array: List<String>):String{
+//        return when(command){
+//            "GET" -> get(array[1])
+//            "SET" -> set(array[1], array[2])
+//            "SETNX" -> setnx(array[1], array[2])
+//            "GETSET" -> getset(array[1], array[2])
+//            "STRLEN" -> strlen(array[1])
+//            "APPEND" -> append(array[1], array[2])
+//            "SETRANGE" -> setrange(array[1],array[2].toInt()?:0,array[3])
+//            "INCR" -> incr(array[1])
+//            "getrange" -> getrange(array[1],array[2].toInt(),array[3].toInt())
+//            else -> "not supported command"
+//        }
+//    }
 }

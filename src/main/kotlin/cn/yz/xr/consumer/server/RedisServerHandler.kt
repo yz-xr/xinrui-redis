@@ -8,10 +8,10 @@ import io.netty.channel.ChannelDuplexHandler
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelPromise
 import io.netty.handler.codec.redis.ArrayRedisMessage
+import io.netty.handler.codec.redis.ErrorRedisMessage
 import io.netty.handler.codec.redis.FullBulkStringRedisMessage
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import kotlin.collections.HashMap
 
 class RedisServerHandler : ChannelDuplexHandler() {
 
@@ -40,15 +40,29 @@ class RedisServerHandler : ChannelDuplexHandler() {
     private fun invokeAkka(ctx: ChannelHandlerContext, message: ArrayRedisMessage) {
         val command = (message.children()[0] as FullBulkStringRedisMessage).content().toString(CharsetUtil.CHARSET_UTF_8)
         // println("command: $command")
-        when(command) {
+        when (command) {
             "COMMAND" -> {
-                val fullBulkStringRedisMessage = FullBulkStringRedisMessage(ByteBufUtil.writeUtf8(ctx.alloc(), "ok"))
+                val ret = "ok"
+                val fullBulkStringRedisMessage = FullBulkStringRedisMessage(ByteBufUtil.writeUtf8(ctx.alloc(), ret))
                 ctx.writeAndFlush(fullBulkStringRedisMessage)
+                logger.info("服务器收到COMMAND指令，返回结果: {}", ret)
             }
             else -> {
-                val dispatcherActor = ApplicationMain.managerActor
-                val redisCommand = RMessage(command, message, ctx)
-                dispatcherActor.tell(redisCommand)
+                logger.info("服务器收到操作指令 {} ", message)
+                if (message.children().size <= 1) {
+                    ctx.writeAndFlush(ErrorRedisMessage("wrong number of arguments (given 0, expected 1)"))
+                } else {
+                    val dispatcherActor = ApplicationMain.managerActor
+                    val redisCommand = RMessage(command, message, ctx)
+                    dispatcherActor.tell(redisCommand)
+                    //val sb = StringBuffer()
+                    //if (message.children().size > 0) {
+                    //    for (child in message.children()) {
+                    //        sb.append(child.toString())
+                    //        sb.append(" ")
+                    //    }
+                    //}
+                }
             }
         }
     }
@@ -79,8 +93,8 @@ class RedisServerHandler : ChannelDuplexHandler() {
      * 处理异常情况
      */
     override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
-        //cause.printStackTrace()
-        logger.warn("client close ungracefully：{}", cause.message)
+        cause.printStackTrace()
+        // logger.warn("client close ungracefully：{}", cause.message)
         ctx.close()
     }
 

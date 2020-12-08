@@ -29,8 +29,8 @@ class RedisClientHandler : ChannelDuplexHandler() {
      */
     override fun channelRead(ctx: ChannelHandlerContext?, msg: Any?) {
         val redisMessage = msg as RedisMessage
-        printAggregatedRedisResponse(redisMessage);
-        ReferenceCountUtil.release(redisMessage);
+        printAggregatedRedisResponse(redisMessage)
+        ReferenceCountUtil.release(redisMessage)
     }
 
     private fun printAggregatedRedisResponse(redisMessage: RedisMessage) {

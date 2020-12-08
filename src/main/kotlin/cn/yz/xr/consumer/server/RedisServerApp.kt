@@ -11,8 +11,12 @@ import io.netty.handler.codec.redis.RedisArrayAggregator
 import io.netty.handler.codec.redis.RedisBulkStringAggregator
 import io.netty.handler.codec.redis.RedisDecoder
 import io.netty.handler.codec.redis.RedisEncoder
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 class RedisServerApp {
+
+    private val logger: Logger = LoggerFactory.getLogger(RedisServerApp::class.java)
 
     fun run() {
         val serverBootstrap = ServerBootstrap()
@@ -33,7 +37,7 @@ class RedisServerApp {
 
             serverBootstrap.channel(NioServerSocketChannel::class.java)
             val channelFuture = serverBootstrap.bind(ApplicationMain.port).sync()
-            println("服务器启动成功！")
+            logger.info("服务器启动成功！")
             channelFuture.channel().closeFuture().sync()
         } finally {
             group.shutdownGracefully()

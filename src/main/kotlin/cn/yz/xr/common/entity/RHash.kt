@@ -1,5 +1,8 @@
 package cn.yz.xr.common.entity
 
+import io.netty.handler.codec.redis.ErrorRedisMessage
+import io.netty.handler.codec.redis.RedisMessage
+
 class RHash(
     var hash: LinkedHashMap<String, String> = linkedMapOf(),
     val operationList: List<String> = listOf("HSET","HGET")
@@ -40,10 +43,13 @@ class RHash(
         return "(integer) ${hash.size}"
     }
 
-    fun operation(command: String, array: List<String>):String{
-        return when(command){
-            "HVALS" -> getAllValue()
-            else -> "not support command"
-        }
+    fun operation(command: String, array: List<String>):RedisMessage{
+
+        return ErrorRedisMessage("")
+
+//        return when(command){
+//            "HVALS" -> getAllValue()
+//            else -> "not support command"
+//        }
     }
 }

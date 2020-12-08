@@ -9,6 +9,7 @@ import cn.yz.xr.common.entity.*
 import cn.yz.xr.common.entity.repo.RMessage
 import cn.yz.xr.common.utils.MessageUtil
 import io.netty.buffer.ByteBufUtil
+import io.netty.handler.codec.redis.ErrorRedisMessage
 import io.netty.handler.codec.redis.FullBulkStringRedisMessage
 
 class ProcessActor(
@@ -40,21 +41,20 @@ class ProcessActor(
     private fun onProcess(message: RMessage): Behavior<RMessage> {
         val (command, content, channel, timestamp) = message
         val arrays = MessageUtil.convertToArray(content)
-        var type = command.toUpperCase()
-        val response = when (type) {
+
+        val response = when (val type = command.toUpperCase()) {
             in this.rString.operationList -> this.rString.operation(type, arrays)
             in this.rList.operationList -> this.rList.operation(type, arrays)
             in this.rHash.operationList -> this.rHash.operation(type, arrays)
             in this.rSet.operationList -> this.rSet.operation(type, arrays)
             in this.rZSet.operationList -> this.rZSet.operation(type, arrays)
-            else -> otherProcess(arrays)
+            else -> {
+                // 不匹配
+                ErrorRedisMessage("I'm sorry, I don't recognize that command.")
+            }
         }
-        val fullBulkStringRedisMessage = FullBulkStringRedisMessage(ByteBufUtil.writeUtf8(channel.alloc(), response))
-        channel.writeAndFlush(fullBulkStringRedisMessage)
+        //val fullBulkStringRedisMessage = FullBulkStringRedisMessage(ByteBufUtil.writeUtf8(channel.alloc(), response))
+        channel.writeAndFlush(response)
         return this
-    }
-
-    private fun otherProcess(array: List<String>): String {
-        return "not support command"
     }
 }
