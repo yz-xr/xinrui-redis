@@ -6,12 +6,15 @@ import akka.actor.typed.javadsl.AbstractBehavior
 import akka.actor.typed.javadsl.ActorContext
 import akka.actor.typed.javadsl.Behaviors
 import akka.actor.typed.javadsl.Receive
+import cn.hutool.core.util.CharsetUtil
 import cn.yz.xr.common.Command
+import cn.yz.xr.common.RMessage
+import io.netty.handler.codec.redis.FullBulkStringRedisMessage
 
 class ManagerActor(
         context: ActorContext<Any>,
         private val max: Int,
-        private var childArray: ArrayList<ActorRef<Command>> = arrayListOf(),
+        private var childArray: ArrayList<ActorRef<RMessage>> = arrayListOf(),
         private var response: String = ""
 ) : AbstractBehavior<Any>(context){
 
@@ -31,19 +34,21 @@ class ManagerActor(
     }
 
     override fun createReceive(): Receive<Any> {
-        return newReceiveBuilder().onMessage<Command>(
-            Command::class.java
-        ) { message: Command -> this.onCommand(message) }
+        return newReceiveBuilder()
             .onMessage<String>(
                 String::class.java
             ){message: String -> this.returnRes(message) }
+                .onMessage<RMessage>(
+                        RMessage::class.java
+                ) { message: RMessage -> this.onCommand(message) }
             .build()
     }
 
     // 接受command命令，并分配给子actor处理
-    private fun onCommand(command: Command):Behavior<Any>{
-        val (time,content,clientId) = command
-        childArray[clientId % max].tell(command)
+    private fun onCommand(message: RMessage):Behavior<Any>{
+        val (_,content, _, _) = message
+        val key = (content.children()[0] as FullBulkStringRedisMessage).content().toString(CharsetUtil.CHARSET_UTF_8)
+        childArray[key.hashCode() % max].tell(message)
         return this
     }
 
@@ -54,7 +59,7 @@ class ManagerActor(
         return this
     }
 
-    fun getChildrenArray():ArrayList<ActorRef<Command>>{
+    fun getChildrenArray():ArrayList<ActorRef<RMessage>>{
         return this.childArray
     }
 

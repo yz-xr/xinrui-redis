@@ -6,50 +6,53 @@ import akka.actor.typed.javadsl.ActorContext
 import akka.actor.typed.javadsl.Behaviors
 import akka.actor.typed.javadsl.Receive
 import cn.yz.xr.common.*
+import io.netty.buffer.ByteBufUtil
+import io.netty.handler.codec.redis.FullBulkStringRedisMessage
 
 class ProcessActor(
-    context: ActorContext<Command>,
+    context: ActorContext<RMessage>,
     private var rString:Rstring = Rstring(),
     private var rList: Rlist = Rlist(),
     private var rHash: Rhash = Rhash(),
     private var rSet: Rset = Rset(),
     private var rZSet: ZSet = ZSet("hello")
-) : AbstractBehavior<Command> (context){
+) : AbstractBehavior<RMessage> (context){
 
     companion object{
-        fun create(): Behavior<Command> {
+        fun create(): Behavior<RMessage> {
             return Behaviors.setup{
-                    context: ActorContext<Command> ->
+                    context: ActorContext<RMessage> ->
                 ProcessActor(context)
             }
         }
     }
 
-    override fun createReceive(): Receive<Command> {
+    override fun createReceive(): Receive<RMessage> {
         return newReceiveBuilder()
             .onMessage(
-                Command::class.java
-            ) { command:  Command ->
+                RMessage::class.java
+            ) { command:  RMessage ->
                 onProcess(command)
             }.build()
     }
 
-    private fun onProcess(command: Command): Behavior<Command>{
-        var (time, content, client, father) = command
-        var operation = content.split(" ")[0].toUpperCase()
-        var response = when(operation){
-            in this.rString.operationList -> this.rString.operation(content)
-            in this.rList.operationList -> this.rList.operation(content)
-            in this.rHash.operationList -> this.rHash.operation(content)
-            in this.rSet.operationList -> this.rSet.operation(content)
-            in this.rZSet.operationList -> this.rZSet.operation(content)
-            else -> otherProcess(content)
+    private fun onProcess(message: RMessage): Behavior<RMessage>{
+        val (command, content, channel, timestamp) = message
+        val arrays = Util.convertToArray(content)
+        val response = when(command.toUpperCase()){
+            in this.rString.operationList -> this.rString.operation(command.toUpperCase(), arrays)
+            in this.rList.operationList -> this.rList.operation(command, arrays)
+            in this.rHash.operationList -> this.rHash.operation(command, arrays)
+            in this.rSet.operationList -> this.rSet.operation(command, arrays)
+            in this.rZSet.operationList -> this.rZSet.operation(command, arrays)
+            else -> otherProcess(arrays)
         }
-        father.tell(response)
+        val fullBulkStringRedisMessage = FullBulkStringRedisMessage(ByteBufUtil.writeUtf8(channel.alloc(), response))
+        channel.writeAndFlush(fullBulkStringRedisMessage)
         return this
     }
 
-    private fun otherProcess(command: String) : String{
+    private fun otherProcess(array: List<String>) : String{
         return "not support command"
     }
 }

@@ -40,10 +40,8 @@ class Rhash(
         return "(integer) ${hash.size}"
     }
 
-    fun operation(command:String):String{
-        var array = command.split(" ")
-        val type = array[0].toUpperCase()
-        return when(type){
+    fun operation(command: String, array: List<String>):String{
+        return when(command){
             "HVALS" -> getAllValue()
             else -> "not support command"
         }

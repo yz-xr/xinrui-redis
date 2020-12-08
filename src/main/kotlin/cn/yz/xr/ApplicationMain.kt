@@ -3,7 +3,6 @@ package cn.yz.xr
 import akka.actor.typed.ActorSystem
 import cn.yz.xr.consumer.server.RedisServerApp
 import cn.yz.xr.producer.ManagerActor
-import cn.yz.xr.producer.ManagerActorTest
 import java.util.*
 
 /**
@@ -40,7 +39,7 @@ class ApplicationMain {
         // 读取配置文件，获取端口信息
         var port = 0
         // Akka 启动
-        val managerActor: ActorSystem<Any> = ActorSystem.create(ManagerActorTest.create(10), "ManagerActor")
+        val managerActor: ActorSystem<Any> = ActorSystem.create(ManagerActor.create(10), "ManagerActor")
     }
 }
 
