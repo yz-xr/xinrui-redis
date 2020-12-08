@@ -39,12 +39,13 @@ class ProcessActor(
     private fun onProcess(message: RMessage): Behavior<RMessage>{
         val (command, content, channel, timestamp) = message
         val arrays = Util.convertToArray(content)
-        val response = when(command.toUpperCase()){
-            in this.rString.operationList -> this.rString.operation(command.toUpperCase(), arrays)
-            in this.rList.operationList -> this.rList.operation(command, arrays)
-            in this.rHash.operationList -> this.rHash.operation(command, arrays)
-            in this.rSet.operationList -> this.rSet.operation(command, arrays)
-            in this.rZSet.operationList -> this.rZSet.operation(command, arrays)
+        var type = command.toUpperCase()
+        val response = when(type){
+            in this.rString.operationList -> this.rString.operation(type, arrays)
+            in this.rList.operationList -> this.rList.operation(type, arrays)
+            in this.rHash.operationList -> this.rHash.operation(type, arrays)
+            in this.rSet.operationList -> this.rSet.operation(type, arrays)
+            in this.rZSet.operationList -> this.rZSet.operation(type, arrays)
             else -> otherProcess(arrays)
         }
         val fullBulkStringRedisMessage = FullBulkStringRedisMessage(ByteBufUtil.writeUtf8(channel.alloc(), response))
