@@ -9,7 +9,10 @@ import akka.actor.typed.javadsl.Receive
 import cn.yz.xr.common.entity.*
 import cn.yz.xr.common.entity.repo.RMessage
 import cn.yz.xr.common.utils.MessageUtil
+import cn.yz.xr.consumer.server.RedisServerHandler
 import io.netty.handler.codec.redis.ErrorRedisMessage
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 /**
  * 子actor根据命令，将之分配给不同的对象进行处理
@@ -23,6 +26,9 @@ class ProcessActor(
         private var rSet: RSet = RSet(),
         private var rZSet: RZSet = RZSet()
 ) : AbstractBehavior<Any>(context) {
+
+    private val logger: Logger = LoggerFactory.getLogger(RedisServerHandler::class.java)
+
     companion object {
         fun create(father: ActorRef<Any>): Behavior<Any> {
             return Behaviors.setup { context: ActorContext<Any> ->
@@ -40,6 +46,8 @@ class ProcessActor(
     }
 
     private fun onProcess(message: RMessage): Behavior<Any> {
+        logger.info("children actor: {}", context.toString())
+
         val (command, content, channel, _) = message
         val arrays = MessageUtil.convertToArray(content)
         val type = command.toUpperCase()
@@ -67,11 +75,11 @@ class ProcessActor(
     private fun judgeRepetition(type:String, arrys:List<String>):Boolean{
         if(type in listOf<String>("SET","HSET","LPUSH","SADD","ZADD")){
             when(type){
-                "SET" -> return arrys[1] in rList.listMap.keys.union(rHash.hash.keys).union(rSet.rset.keys)
+                "SET" -> return arrys[1] in rList.listMap.keys.union(rHash.listMap.keys).union(rSet.rset.keys)
                 "HSET" -> return arrys[1] in rList.listMap.keys.union(rString.map.keys).union(rSet.rset.keys)
-                "LPUSH" -> return arrys[1] in rList.listMap.keys.union(rString.map.keys).union(rSet.rset.keys)
-                "SADD" -> return arrys[1] in rList.listMap.keys.union(rString.map.keys).union(rHash.hash.keys)
-                "ZADD" -> return arrys[1] in rList.listMap.keys.union(rString.map.keys).union(rHash.hash.keys).union(rSet.rset.keys)
+                "LPUSH" -> return arrys[1] in rHash.listMap.keys.union(rString.map.keys).union(rSet.rset.keys)
+                "SADD" -> return arrys[1] in rList.listMap.keys.union(rString.map.keys).union(rHash.listMap.keys)
+                "ZADD" -> return arrys[1] in rList.listMap.keys.union(rString.map.keys).union(rHash.listMap.keys).union(rSet.rset.keys)
             }
         }
         return false
