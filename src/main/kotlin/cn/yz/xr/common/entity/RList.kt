@@ -15,9 +15,11 @@ class RList(
             return ErrorRedisMessage("wrong number of arguments for 'lpush' command")
         }
 
+        var originalLength = 0
         if (listMap.containsKey(array[1])) {
             val exitedDeque: ArrayDeque<String>? = listMap[array[1]]
             if (exitedDeque != null) {
+                originalLength = exitedDeque.size + array.size - 2
                 for (i in 2 until array.size) {
                     exitedDeque.addFirst(array[i])
                 }
@@ -30,8 +32,9 @@ class RList(
                 deque.addFirst(array[i])
             }
             listMap[array[1]] = deque
+            originalLength = array.size - 2
         }
-        return IntegerRedisMessage((array.size - 2).toLong())
+        return IntegerRedisMessage(originalLength.toLong())
     }
 
     private fun rpush(array: List<String>): RedisMessage {
@@ -40,9 +43,11 @@ class RList(
             return ErrorRedisMessage("wrong number of arguments for 'lpush' command")
         }
 
+        var originalLength = 0
         if (listMap.containsKey(array[1])) {
             val exitedDeque: ArrayDeque<String>? = listMap[array[1]]
             if (exitedDeque != null) {
+                originalLength = exitedDeque.size + array.size - 2
                 for (i in 2 until array.size) {
                     exitedDeque.addLast(array[i])
                 }
@@ -55,8 +60,9 @@ class RList(
                 deque.addLast(array[i])
             }
             listMap[array[1]] = deque
+            originalLength = array.size - 2
         }
-        return IntegerRedisMessage((array.size - 2).toLong())
+        return IntegerRedisMessage(originalLength.toLong())
     }
 
     private fun lpop(array: List<String>): RedisMessage {
@@ -194,67 +200,106 @@ class RList(
         }
     }
 
-//    private fun lrange(array: List<String>): RedisMessage {
-//        // 校验参数个数
-//        val paramError: ErrorRedisMessage? = MessageUtil.checkArgsNum(array, 4)
-//
-//        if (paramError == null) {
-//            return if (listMap.containsKey(array[1])) {
-//                val existedDeque = listMap[array[1]]
-//                val intTransErrorFor2 = MessageUtil.checkString2Int(array[2])
-//                val intTransErrorFor3 = MessageUtil.checkString2Int(array[3])
-//                return if (intTransErrorFor2 != null || intTransErrorFor3 != null) {
-//                    intTransErrorFor2
-//                } else {
-//                    if (existedDeque != null) {
-//                        var low = array[2].toInt()
-//                        var high = array[3].toInt()
-//                        if (low < 0) low = 0
-//                        if (high > existedDeque.size - 1) high = existedDeque.size - 1
-//                        val subList = existedDeque.subList(low, high)
-//                        val rmList = mutableListOf<RedisMessage>()
-//                        subList.forEach { rmList.add(SimpleStringRedisMessage(it)) }
-//                        ArrayRedisMessage(rmList)
-//                    } else {
-//                        SimpleStringRedisMessage("(empty list or set)")
-//                    }
-//                }
-//            } else {
-//                ErrorRedisMessage("Inner exception")
-//            }
-//        } else {
-//            return paramError
-//        }
-//    }
+    private fun lrange(array: List<String>): RedisMessage {
+        // 校验参数个数
+        val paramError: ErrorRedisMessage? = MessageUtil.checkArgsNum(array, 4)
+
+        if (paramError == null) {
+            return if (listMap.containsKey(array[1])) {
+                val existedDeque = listMap[array[1]]
+                val intTransErrorFor2 = MessageUtil.checkString2Int(array[2])
+                val intTransErrorFor3 = MessageUtil.checkString2Int(array[3])
+                return if (intTransErrorFor2 == null && intTransErrorFor3 == null) {
+                    if (existedDeque != null) {
+                        val low = array[2].toInt()
+                        val high = array[3].toInt()
+                        val lowForSubIndex: Int = when {
+                            low < 0 && low >= (0 - existedDeque.size) -> low + existedDeque.size
+                            low < (0 - existedDeque.size) -> 0
+                            else -> low
+                        }
+                        val highForSubIndex: Int = when {
+                            high <= existedDeque.size - 1 && high >= 0 -> high + 1
+                            high > existedDeque.size - 1 -> existedDeque.size
+                            high < 0 && high >= (0 - existedDeque.size) -> high + existedDeque.size + 1
+                            else -> 0
+                        }
+                        if (lowForSubIndex > highForSubIndex) {
+                            return SimpleStringRedisMessage("(empty list or set)")
+                        }
+                        val subList = existedDeque.subList(lowForSubIndex, highForSubIndex)
+                        val rmList = mutableListOf<RedisMessage>()
+                        subList.forEach { rmList.add(SimpleStringRedisMessage(it)) }
+                        ArrayRedisMessage(rmList)
+                    } else {
+                        SimpleStringRedisMessage("(empty list or set)")
+                    }
+                } else {
+                    ErrorRedisMessage("ERR value is not an integer or out of range")
+                }
+            } else {
+                SimpleStringRedisMessage("(empty list or set)")
+            }
+        } else {
+            return paramError
+        }
+    }
 
     private fun lrem(array: List<String>): RedisMessage {
         // 校验参数个数
-        MessageUtil.checkArgsNum(array, 4)
+        val paramError: ErrorRedisMessage? = MessageUtil.checkArgsNum(array, 4)
 
-        return if (listMap.containsKey(array[1])) {
-            val existedDeque = listMap[array[1]]
-            if (MessageUtil.checkString2Int(array[2]) == null) {
-                ErrorRedisMessage("ERR value is not an integer or out of range")
-            } else {
-                val count = array[2].toInt()
-                if (existedDeque != null) {
-                    if (count.absoluteValue > 0) {
-                        // 删除指定个数匹配的key
-                        existedDeque.removeIf { it == array[3] }
-                        IntegerRedisMessage(1)
-                    } else {
-                        // 当为0时删除所有的匹配的key
-                        existedDeque.removeIf { it == array[3] }
-                        IntegerRedisMessage(1)
-                    }
+        if (paramError == null) {
+            return if (listMap.containsKey(array[1])) {
+                val existedDeque = listMap[array[1]]
+                val intTransError = MessageUtil.checkString2Int(array[2])
+                return if (intTransError != null) {
+                    intTransError
                 } else {
-                    ErrorRedisMessage("Inner exception")
+                    val count = array[2].toInt()
+                    if (existedDeque != null) {
+                        when {
+                            count > 0 -> {
+                                // count > 0 : 从表头开始向表尾搜索，移除与 VALUE 相等的元素，数量为 COUNT
+                                var num = 0
+                                existedDeque.forEach {
+                                    if (it == array[3] && num < count) {
+                                        existedDeque.remove(it)
+                                        num++
+                                    }
+                                }
+                                IntegerRedisMessage(num.toLong())
+                            }
+                            count < 0 -> {
+                                // count < 0 : 从表尾开始向表头搜索，移除与 VALUE 相等的元素，数量为 COUNT 的绝对值
+                                var num = 0
+                                val existedDequeReversed = existedDeque.asReversed()
+                                existedDequeReversed.reversed().forEach {
+                                    if (it == array[3] && num < count.absoluteValue) {
+                                        existedDequeReversed.remove(it)
+                                        num++
+                                    }
+                                }
+                                existedDequeReversed.asReversed()
+                                IntegerRedisMessage(num.toLong())
+                            }
+                            else -> {
+                                // count = 0 : 移除表中所有与 VALUE 相等的值
+                                val beforeNum = existedDeque.size
+                                existedDeque.removeIf { it == array[3] }
+                                IntegerRedisMessage((beforeNum - existedDeque.size).toLong())
+                            }
+                        }
+                    } else {
+                        ErrorRedisMessage("Inner exception")
+                    }
                 }
+            } else {
+                IntegerRedisMessage(0)
             }
         } else {
-            IntegerRedisMessage(0)
+            return paramError
         }
-
     }
 
     fun operation(command: String, array: List<String>): RedisMessage {
@@ -266,8 +311,8 @@ class RList(
             "RPOP" -> rpop(array)
             "LLEN" -> llen(array)
             "LINDEX" -> llindex(array)
-            //"LRANGE" -> lrange(array)
-            //"LREM" -> lrem(array)
+            "LRANGE" -> lrange(array)
+            "LREM" -> lrem(array)
             else -> ErrorRedisMessage("not support this command at present")
         }
     }
