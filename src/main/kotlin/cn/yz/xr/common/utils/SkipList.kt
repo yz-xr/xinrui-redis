@@ -136,3 +136,10 @@ class SkipList {
         }
     }
 }
+
+fun main(args:Array<String>){
+    val skiplist = SkipList()
+    skiplist.insert("hello", 3)
+    skiplist.insert("world",3)
+    println(skiplist)
+}

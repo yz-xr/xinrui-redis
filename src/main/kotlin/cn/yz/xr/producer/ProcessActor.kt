@@ -10,6 +10,7 @@ import cn.yz.xr.common.entity.*
 import cn.yz.xr.common.entity.repo.RMessage
 import cn.yz.xr.common.utils.MessageUtil
 import cn.yz.xr.consumer.server.RedisServerHandler
+import cn.yz.xr.producer.communication.CommonData
 import io.netty.handler.codec.redis.ErrorRedisMessage
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -42,8 +43,23 @@ class ProcessActor(
                 .onMessage(
                         RMessage::class.java
                 ) { command: RMessage -> onProcess(command)}
+                .onMessage(
+                        CommonData::class.java
+                ){commonData:CommonData -> otherProcess(commonData)}
                 .build()
     }
+
+    private fun otherProcess(commonData: CommonData):Behavior<Any>{
+        val (rMessage,_) = commonData
+        val (command,_,_,_) = rMessage
+        val res = when(command){
+            "KEYS" -> rList.listMap.keys.union(rHash.listMap.keys).union(rSet.rset.keys)
+            else -> ""
+        }
+        father.tell(CommonData(rMessage,res))
+        return this
+    }
+
 
     private fun onProcess(message: RMessage): Behavior<Any> {
         logger.info("children actor: {}", context.toString())

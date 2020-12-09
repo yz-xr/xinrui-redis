@@ -130,8 +130,3 @@ class RString(
         }
     }
 }
-
-fun main(args:Array<String>){
-    var age = "2.3"
-    println(age.toFloat())
-}
