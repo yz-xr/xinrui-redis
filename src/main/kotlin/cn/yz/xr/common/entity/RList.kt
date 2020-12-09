@@ -5,7 +5,7 @@ import io.netty.handler.codec.redis.*
 import kotlin.math.absoluteValue
 
 class RList(
-        private var listMap: MutableMap<String, ArrayDeque<String>> = mutableMapOf(),
+        var listMap: MutableMap<String, ArrayDeque<String>> = mutableMapOf(),
         var operationList: List<String> = listOf("LSET", "LPUSH", "LPOP", "RPUSH", "RPOP", "LLEN", "LINDEX", "LRANGE", "LREM")
 ) {
 
