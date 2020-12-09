@@ -44,12 +44,7 @@ class ProcessActor(
         val arrays = MessageUtil.convertToArray(content)
         val type = command.toUpperCase()
         if(judgeRepetition(type,arrays)){
-            // SimpleStringRedisMessage  单行输出文本
-            // IntegerRedisMessage(1)    整数输出文本
-            // ErrorRedisMessage()       错误输出文本
-            // FullBulkStringRedisMessage    多行输出文本
-            // ArrayRedisMessage             数组输出文本
-            channel.write(ErrorRedisMessage("WRONGTYPE Operation against a key holding the wrong kind of value"))
+            channel.writeAndFlush(ErrorRedisMessage("WRONGTYPE Operation against a key holding the wrong kind of value"))
         }else{
             val response = when (type) {
                 in this.rString.operationList -> this.rString.operation(type, arrays)
@@ -70,11 +65,11 @@ class ProcessActor(
 
     // 判断相同的key是否在系统中存在，但是类型不同。如果存在，则报错
     private fun judgeRepetition(type:String, arrys:List<String>):Boolean{
-        if(type in listOf<String>("SET","HSET","LSET","SADD","ZADD")){
+        if(type in listOf<String>("SET","HSET","LPUSH","SADD","ZADD")){
             when(type){
                 "SET" -> return arrys[1] in rList.listMap.keys.union(rHash.hash.keys).union(rSet.rset.keys)
                 "HSET" -> return arrys[1] in rList.listMap.keys.union(rString.map.keys).union(rSet.rset.keys)
-                "LSET" -> return arrys[1] in rHash.hash.keys.union(rString.map.keys).union(rSet.rset.keys)
+                "LPUSH" -> return arrys[1] in rList.listMap.keys.union(rString.map.keys).union(rSet.rset.keys)
                 "SADD" -> return arrys[1] in rList.listMap.keys.union(rString.map.keys).union(rHash.hash.keys)
                 "ZADD" -> return arrys[1] in rList.listMap.keys.union(rString.map.keys).union(rHash.hash.keys).union(rSet.rset.keys)
             }
