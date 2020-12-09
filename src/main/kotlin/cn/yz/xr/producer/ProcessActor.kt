@@ -9,8 +9,6 @@ import akka.actor.typed.javadsl.Receive
 import cn.yz.xr.common.entity.*
 import cn.yz.xr.common.entity.repo.RMessage
 import cn.yz.xr.common.utils.MessageUtil
-import cn.yz.xr.common.utils.SkipList
-import cn.yz.xr.producer.communication.PostBrother
 import io.netty.handler.codec.redis.ErrorRedisMessage
 
 /**
@@ -23,10 +21,8 @@ class ProcessActor(
         private var rList: RList = RList(),
         private var rHash: RHash = RHash(),
         private var rSet: RSet = RSet(),
-        private var rZSet: RZSet = RZSet(),
-        private var rCommon: RCommon = RCommon()
+        private var rZSet: RZSet = RZSet()
 ) : AbstractBehavior<Any>(context) {
-
     companion object {
         fun create(father: ActorRef<Any>): Behavior<Any> {
             return Behaviors.setup { context: ActorContext<Any> ->
@@ -40,12 +36,6 @@ class ProcessActor(
                 .onMessage(
                         RMessage::class.java
                 ) { command: RMessage -> onProcess(command)}
-                .onMessage<PostBrother>(
-                        PostBrother::class.java
-                ){message: PostBrother -> this.getBrother(message)}
-                .onMessage(
-                        String::class.java
-                ){command: String -> otherProcess(command) }
                 .build()
     }
 
@@ -67,7 +57,6 @@ class ProcessActor(
                 in this.rHash.operationList -> this.rHash.operation(type, arrays)
                 in this.rSet.operationList -> this.rSet.operation(type, arrays)
                 in this.rZSet.operationList -> this.rZSet.operation(type, arrays)
-                in this.rCommon.operationList -> this.rCommon.operation(type, arrays)
                 else -> {
                     // 不匹配
                     ErrorRedisMessage("I'm sorry, I don't recognize that command.")
@@ -76,15 +65,6 @@ class ProcessActor(
             //val fullBulkStringRedisMessage = FullBulkStringRedisMessage(ByteBufUtil.writeUtf8(channel.alloc(), response))
             channel.writeAndFlush(response)
         }
-        return this
-    }
-
-    private fun otherProcess(command:String):Behavior<Any>{
-        return this
-    }
-
-    private fun getBrother(message:PostBrother):Behavior<Any>{
-        this.rCommon.setBothers(message.brother)
         return this
     }
 

@@ -4,10 +4,11 @@ import io.netty.handler.codec.redis.ErrorRedisMessage
 import io.netty.handler.codec.redis.IntegerRedisMessage
 import io.netty.handler.codec.redis.RedisMessage
 import io.netty.handler.codec.redis.SimpleStringRedisMessage
+import java.lang.Exception
 
 class RString(
         var map: LinkedHashMap<String,String> = linkedMapOf(),
-        var operationList: List<String> = listOf("SET","GET","SETNX","GETSET","STRLEN","APPEND","SETRANGE","INCR","GETRANGE","INCRBY","INCRBYFLOAT")
+        var operationList: List<String> = listOf("SET","GET","SETNX","GETSET","STRLEN","APPEND","SETRANGE","INCR","GETRANGE","INCRBY","INCRBYFLOAT","DECR","DECRBY")
 ){
     fun set(key:String,value:String): RedisMessage{
         map[key] = value
@@ -43,28 +44,28 @@ class RString(
         return IntegerRedisMessage(res.length.toLong())
     }
 
-    fun append(key:String, value: String): RedisMessage{
-        map[key] = map[key]?:"" + value
-        val res = map[key]?:""
-        return IntegerRedisMessage(res.length.toLong())
+    private fun append(key:String, value: String): RedisMessage {
+        this.map[key] = this.map[key] + value
+        return IntegerRedisMessage(this.map[key]?.length?.toLong()!!)
     }
 
-    fun setrange(key: String, offset:Int, value: String): RedisMessage{
+    private fun setrange(key: String, offset:Int, value: String): RedisMessage{
         var res = map[key]?:""
         if(res.length < offset){
             for(i in res.length..offset){
                 res += "\\x00"
             }
-            res += offset
+            res += value
         }else if(offset + value.length < res.length){
             res = res.substring(0,offset) + value + res.substring(offset+value.length, res.length)
         }else{
             res = res.substring(0,offset) + value
         }
+        this.map[key] = res
         return SimpleStringRedisMessage(res)
     }
 
-    fun getRange(key:String, start:Int, end:Int): RedisMessage{
+    private fun getRange(key:String, start:Int, end:Int): RedisMessage{
         if(end in 1 until start){
             return SimpleStringRedisMessage("")
         }
@@ -81,24 +82,29 @@ class RString(
     }
 
     private fun incrBy(key: String,increment:Int): RedisMessage{
-        var value = map[key]?:"0".toIntOrNull()
-        return if(value is Int){
-            map[key] = "${value+increment}"
-            IntegerRedisMessage((value+increment).toLong())
-        }else{
-            ErrorRedisMessage("(error) ERR value is not an integer or out of range")
+        var value = 0
+        if(map.containsKey(key)){
+            try{
+                value = map[key]?.toInt() ?: return ErrorRedisMessage("ERR value is not an integer or out of range")
+            }catch (e:Exception){
+                return ErrorRedisMessage("ERR value is not an integer or out of range")
+            }
         }
+        this.map[key] = "${value+increment}"
+        return IntegerRedisMessage((value+increment).toLong())
     }
 
-    private fun incrBrfFloat(key: String,increment:Float): RedisMessage{
-        var value = map[key]?:"0.0".toFloatOrNull()
-        return if(value is Float){
-            map[key] = "${value+increment}"
-            SimpleStringRedisMessage("${map[key]}")
-        }else{
-            ErrorRedisMessage("ERR value is not an float or out of range")
-
+    private fun incrByFloat(key: String, increment:Float): RedisMessage{
+        var value = 0.0f
+        if(map.containsKey(key)){
+            try{
+                value = map[key]?.toFloat() ?: return ErrorRedisMessage("ERR value is not an integer or out of range")
+            }catch (e:Exception){
+                return ErrorRedisMessage("ERR value is not an integer or out of range")
+            }
         }
+        this.map[key] = "${value+increment}"
+        return SimpleStringRedisMessage("${this.map[key]}")
     }
 
     fun keys():Set<String>{
@@ -117,10 +123,15 @@ class RString(
             "INCR" -> incrBy(array[1],1)
             "GETRANGE" -> getRange(array[1],array[2].toInt(),array[3].toInt())
             "INCRBY" -> incrBy(array[1],array[2].toInt())
-            "INCRBYFLOAT" -> incrBrfFloat(array[1],array[2].toFloat())
+            "INCRBYFLOAT" -> incrByFloat(array[1],array[2].toFloat())
             "DECR" -> incrBy(array[1],-1)
             "DECRBY" -> incrBy(array[1], -1 * array[2].toInt())
             else -> ErrorRedisMessage("not supported command")
         }
     }
+}
+
+fun main(args:Array<String>){
+    var age = "2.3"
+    println(age.toFloat())
 }
