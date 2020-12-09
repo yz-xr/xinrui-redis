@@ -95,8 +95,8 @@ class RedisServerHandler : ChannelDuplexHandler() {
      * 处理异常情况
      */
     override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
-        cause.printStackTrace()
-        // logger.warn("client close ungracefully：{}", cause.message)
+        // cause.printStackTrace()
+        logger.warn("Client Close Ungracefully：{}", cause.message)
         ctx.close()
     }
 
