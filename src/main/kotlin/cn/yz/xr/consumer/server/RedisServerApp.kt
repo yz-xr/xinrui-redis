@@ -11,6 +11,7 @@ import io.netty.handler.codec.redis.RedisArrayAggregator
 import io.netty.handler.codec.redis.RedisBulkStringAggregator
 import io.netty.handler.codec.redis.RedisDecoder
 import io.netty.handler.codec.redis.RedisEncoder
+import kotlin.jvm.Throws
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 

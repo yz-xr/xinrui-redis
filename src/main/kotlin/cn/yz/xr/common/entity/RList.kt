@@ -19,7 +19,7 @@ class RList(
                     exitedDeque.addFirst(array[i])
                 }
             } else {
-                return ErrorRedisMessage("(error) Inner exception")
+                return ErrorRedisMessage("Inner exception")
             }
         } else {
             val deque: ArrayDeque<String> = ArrayDeque<String>()
@@ -43,10 +43,10 @@ class RList(
                 if (removeEle != null) {
                     return SimpleStringRedisMessage(removeEle)
                 } else {
-                    return ErrorRedisMessage("(error) Inner exception")
+                    return ErrorRedisMessage("Inner exception")
                 }
             } else {
-                return ErrorRedisMessage("(error) Inner exception")
+                return ErrorRedisMessage("Inner exception")
             }
         }
         return SimpleStringRedisMessage("(nil)")

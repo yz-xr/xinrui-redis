@@ -1,31 +1,33 @@
 package cn.yz.xr.common.entity
 
 import io.netty.handler.codec.redis.ErrorRedisMessage
+import io.netty.handler.codec.redis.IntegerRedisMessage
 import io.netty.handler.codec.redis.RedisMessage
+import io.netty.handler.codec.redis.SimpleStringRedisMessage
 
 class RString(
-    var map: LinkedHashMap<String,String> = linkedMapOf(),
-    var operationList: List<String> = listOf("SET","GET","SETNX")
+        var map: LinkedHashMap<String,String> = linkedMapOf(),
+        var operationList: List<String> = listOf("SET","GET","SETNX","GETSET","STRLEN","APPEND","SETRANGE","INCR","GETRANGE","INCRBY","INCRBYFLOAT")
 ){
-    fun set(key:String,value:String):String{
+    fun set(key:String,value:String): RedisMessage{
         map[key] = value
-        return "OK"
+        return SimpleStringRedisMessage("OK")
     }
 
-    fun get(key:String):String{
-        return map[key]?:"(nil)"
+    fun get(key:String): RedisMessage{
+        return SimpleStringRedisMessage(map[key]?:"(nil)")
     }
 
-    private fun setnx(key:String, value: String):String{
+    private fun setNX(key:String, value: String): RedisMessage{
         return if(map.containsKey(key)){
-            "(integer) 0"
+            IntegerRedisMessage(0)
         }else{
             map[key] = value
-            "OK"
+            SimpleStringRedisMessage("OK")
         }
     }
 
-    private fun getset(key:String, value: String):String{
+    private fun getSet(key:String, value: String): RedisMessage{
         var res = "(nil)"
         if(map.containsKey(key)){
             res = map[key]?:"(nil)"
@@ -33,67 +35,92 @@ class RString(
         }else{
             map[key] = value
         }
-        return res
+        return SimpleStringRedisMessage(res)
     }
 
-    private fun strlen(key:String):String{
-        return "(integer) ${map[key]?:"".length}"
+    private fun strLen(key:String): RedisMessage{
+        val res = map[key]?:""
+        return IntegerRedisMessage(res.length.toLong())
     }
 
-    fun append(key:String, value: String):String{
+    fun append(key:String, value: String): RedisMessage{
         map[key] = map[key]?:"" + value
-        return "(integer) ${map[key]?:"".length}"
+        val res = map[key]?:""
+        return IntegerRedisMessage(res.length.toLong())
     }
 
-    fun setrange(key: String, offset:Int, value: String):String{
+    fun setrange(key: String, offset:Int, value: String): RedisMessage{
         var res = map[key]?:""
         if(res.length < offset){
             for(i in res.length..offset){
                 res += "\\x00"
             }
-            res = res + offset
+            res += offset
         }else if(offset + value.length < res.length){
             res = res.substring(0,offset) + value + res.substring(offset+value.length, res.length)
         }else{
             res = res.substring(0,offset) + value
         }
-        return res
+        return SimpleStringRedisMessage(res)
     }
 
-    fun getrange(key:String, start:Int, end:Int):String{
+    fun getRange(key:String, start:Int, end:Int): RedisMessage{
         if(end in 1 until start){
-            return ""
+            return SimpleStringRedisMessage("")
         }
-        return map[key]?:"".substring(start,end)
+        var str = map[key]?:""
+        var s = start
+        var e = end
+        if(end < 0){
+            e = str.length + end + 1
+        }
+        if(start < 0){
+            s = str.length + start
+        }
+        return SimpleStringRedisMessage(map[key]?:"".substring(s,e))
     }
 
-    private fun incr(key: String):String{
+    private fun incrBy(key: String,increment:Int): RedisMessage{
         var value = map[key]?:"0".toIntOrNull()
         return if(value is Int){
-            map[key] = "${value+1}"
-            "(integer) ${map[key]}"
+            map[key] = "${value+increment}"
+            IntegerRedisMessage((value+increment).toLong())
         }else{
-            "(error) ERR value is not an integer or out of range"
+            ErrorRedisMessage("(error) ERR value is not an integer or out of range")
         }
     }
 
-    fun operation(command: String, array: List<String>):RedisMessage{
+    private fun incrBrfFloat(key: String,increment:Float): RedisMessage{
+        var value = map[key]?:"0.0".toFloatOrNull()
+        return if(value is Float){
+            map[key] = "${value+increment}"
+            SimpleStringRedisMessage("${map[key]}")
+        }else{
+            ErrorRedisMessage("ERR value is not an float or out of range")
 
-        return ErrorRedisMessage("")
+        }
     }
 
-//    fun operation(command: String, array: List<String>):String{
-//        return when(command){
-//            "GET" -> get(array[1])
-//            "SET" -> set(array[1], array[2])
-//            "SETNX" -> setnx(array[1], array[2])
-//            "GETSET" -> getset(array[1], array[2])
-//            "STRLEN" -> strlen(array[1])
-//            "APPEND" -> append(array[1], array[2])
-//            "SETRANGE" -> setrange(array[1],array[2].toInt()?:0,array[3])
-//            "INCR" -> incr(array[1])
-//            "getrange" -> getrange(array[1],array[2].toInt(),array[3].toInt())
-//            else -> "not supported command"
-//        }
-//    }
+    fun keys():Set<String>{
+        return map.keys
+    }
+
+    fun operation(command: String, array: List<String>): RedisMessage{
+        return when(command){
+            "GET" -> get(array[1])
+            "SET" -> set(array[1], array[2])
+            "SETNX" -> setNX(array[1], array[2])
+            "GETSET" -> getSet(array[1], array[2])
+            "STRLEN" -> strLen(array[1])
+            "APPEND" -> append(array[1], array[2])
+            "SETRANGE" -> setrange(array[1],array[2].toInt(),array[3])
+            "INCR" -> incrBy(array[1],1)
+            "GETRANGE" -> getRange(array[1],array[2].toInt(),array[3].toInt())
+            "INCRBY" -> incrBy(array[1],array[2].toInt())
+            "INCRBYFLOAT" -> incrBrfFloat(array[1],array[2].toFloat())
+            "DECR" -> incrBy(array[1],-1)
+            "DECRBY" -> incrBy(array[1], -1 * array[2].toInt())
+            else -> ErrorRedisMessage("not supported command")
+        }
+    }
 }
