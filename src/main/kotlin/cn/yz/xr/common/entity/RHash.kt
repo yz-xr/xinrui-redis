@@ -1,10 +1,7 @@
 package cn.yz.xr.common.entity
 
 import cn.yz.xr.common.utils.MessageUtil
-import io.netty.handler.codec.redis.ErrorRedisMessage
-import io.netty.handler.codec.redis.IntegerRedisMessage
-import io.netty.handler.codec.redis.RedisMessage
-import io.netty.handler.codec.redis.SimpleStringRedisMessage
+import io.netty.handler.codec.redis.*
 
 class RHash(
         var listMap: MutableMap<String, MutableMap<String, Any>> = mutableMapOf<String, MutableMap<String, Any>>(),
@@ -63,6 +60,36 @@ class RHash(
         } else {
             return paramError
         }
+    }
+
+    private fun hmget(array: List<String>): RedisMessage {
+        // 校验参数个数
+        if (array.size <= 2) {
+            return ErrorRedisMessage("wrong number of arguments for 'hmget' command")
+        }
+
+        val rmList: MutableList<RedisMessage> = mutableListOf()
+        return if (listMap.containsKey(array[1])) {
+            val existedMap = listMap[array[1]]
+            if (existedMap != null) {
+                for (i in 2 until array.size) {
+                    if (existedMap.containsKey(array[2])) {
+                        rmList.add(SimpleStringRedisMessage(existedMap[array[2]].toString()))
+                    } else {
+                        rmList.add(SimpleStringRedisMessage("(nil)"))
+                    }
+                }
+                ArrayRedisMessage(rmList)
+            } else {
+                ErrorRedisMessage("Inner Exception")
+            }
+        } else {
+            for (i in 0 until array.size - 2) {
+                rmList.add(SimpleStringRedisMessage("(nil)"))
+            }
+            ArrayRedisMessage(rmList)
+        }
+
     }
 
     private fun hexists(array: List<String>): RedisMessage {
@@ -171,13 +198,12 @@ class RHash(
             if (listMap.containsKey(array[1])) {
                 val existedMap = listMap[array[1]]
                 return if (existedMap != null) {
-                    val rmList = mutableListOf<String>()
-                    existedMap.forEach {
-                        it.key
-                        it.value
+                    val rmList = mutableListOf<RedisMessage>()
+                    for ((key, value) in existedMap) {
+                        rmList.add(SimpleStringRedisMessage(key))
+                        rmList.add(SimpleStringRedisMessage(value.toString()))
                     }
-
-                    return ErrorRedisMessage("")
+                    return ArrayRedisMessage(rmList)
                 } else {
                     ErrorRedisMessage("Inner exception")
                 }
@@ -241,8 +267,8 @@ class RHash(
             "HDEL" -> hdel(array)
             "HSETNX" -> hsetnx(array)
             "HLEN" -> hlen(array)
-            //"HMSET" -> hget(array)
-            //"HMGET" -> hget(array)
+            "HMSET" -> hset(array)
+            "HMGET" -> hmget(array)
             "HINCRBY" -> hincrby(array)
             "HEXISTS" -> hexists(array)
             else -> ErrorRedisMessage("not support this command at present")
