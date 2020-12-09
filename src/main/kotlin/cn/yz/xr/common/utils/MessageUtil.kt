@@ -20,13 +20,24 @@ open class MessageUtil {
         }
 
         /**
-         * 检验传参数目
+         * 检验传参数目与希望是否相等
          */
         fun checkArgsNum(array: List<String>, expectedSize: Int): ErrorRedisMessage? {
-            if (expectedSize < array.size) {
-                return ErrorRedisMessage("(error) wrong number of arguments (given ${array.size}, expected $expectedSize)")
+            if (expectedSize == array.size) {
+                return ErrorRedisMessage("wrong number of arguments (given ${array.size}, expected $expectedSize)")
             }
             return null
+        }
+
+        /**
+         * 判断一个字符串能否转为整形
+         */
+        fun checkString2Int(str: String): Int? {
+            return try {
+                str.toInt()
+            } catch (e: NumberFormatException) {
+                null
+            }
         }
 
 

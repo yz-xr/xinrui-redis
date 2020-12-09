@@ -15,7 +15,6 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import kotlin.jvm.Throws
 
-
 class RedisClientApp {
 
     fun run(): Unit {
