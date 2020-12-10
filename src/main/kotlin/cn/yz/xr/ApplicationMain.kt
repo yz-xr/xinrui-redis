@@ -11,6 +11,7 @@ import akka.actor.typed.javadsl.Routers
 import cn.yz.xr.common.entity.repo.RMessage
 import cn.yz.xr.consumer.server.RedisServerApp
 import cn.yz.xr.producer.ManagerActor
+import cn.yz.xr.producer.ManagerRouterActorTest
 import cn.yz.xr.producer.ProcessActor
 import java.util.*
 
@@ -48,7 +49,9 @@ class ApplicationMain {
     companion object ApplicationInit {
         // 读取配置文件，获取端口信息
         var port = 0
+
         // Akka 启动
+        //val managerActor: ActorSystem<Any> = ActorSystem.create(ManagerRouterActorTest.create(8), "ManagerRouterActorTest")
         val managerActor: ActorSystem<Any> = ActorSystem.create(ManagerActor.create(8), "ManagerActor")
     }
 }

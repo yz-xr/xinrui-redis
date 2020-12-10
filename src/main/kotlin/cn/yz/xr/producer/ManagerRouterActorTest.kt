@@ -1,18 +1,14 @@
 package cn.yz.xr.producer
 
 import akka.actor.typed.ActorRef
-import akka.actor.typed.ActorSystem
 import akka.actor.typed.Behavior
 import akka.actor.typed.SupervisorStrategy
 import akka.actor.typed.javadsl.*
-import akka.routing.ActorRefRoutee
-import akka.routing.Routee
-import cn.hutool.core.util.CharsetUtil
 import cn.yz.xr.common.entity.RCommon
 import cn.yz.xr.common.entity.repo.RMessage
-import cn.yz.xr.common.utils.StrategyUtil
-import cn.yz.xr.producer.communication.CommonData
-import io.netty.handler.codec.redis.FullBulkStringRedisMessage
+import cn.yz.xr.common.utils.MessageUtil
+import io.netty.handler.codec.redis.RedisMessage
+import java.util.function.Function
 
 
 /**
@@ -21,19 +17,28 @@ import io.netty.handler.codec.redis.FullBulkStringRedisMessage
 class ManagerRouterActorTest(
         context: ActorContext<Any>,
         max: Int,
-        private var childArray: ArrayList<ActorRef<Any>> = arrayListOf(),
+        var router: ActorRef<Any>?,
+        //private var childArray: ArrayList<ActorRef<Any>> = arrayListOf(),
         private var rCommon: RCommon = RCommon()
-) : AbstractBehavior<Any>(context){
-
-    private val routeeList: MutableList<Routers> = mutableListOf()
+) : AbstractBehavior<Any>(context) {
 
     init {
-        val pool = Routers.pool(8,
+        val pool = Routers.pool(max,
                 Behaviors.supervise(ProcessActorRouterTest.create(context.self)).onFailure(SupervisorStrategy.restart()))
-        val router: ActorRef<Any> = context.spawn(pool, "processActor-route")
-        for (i in 0..20) {
-            router.tell("msg: $i")
-        }
+                // 两个参数：
+                // 参数一：virtualNodesFactor, 实际节点数 = virtualNodesFactor * routee num
+                // 参数二：function, 表示 key mapping 策略
+                .withConsistentHashingRouting(1, Function {
+                        val array = MessageUtil.convertToArray((it as RMessage).content)
+                        //println(array[1])
+                        array[1]
+                })
+                this.router = context.spawn(pool, "processActor-route")
+
+//        for (i in 0..20) {
+//            router.tell("msg: $i")
+//        }
+
         //val blocking = pool
 
 
@@ -46,21 +51,21 @@ class ManagerRouterActorTest(
     companion object {
         fun create(max: Int): Behavior<Any> {
             return Behaviors.setup { context: ActorContext<Any> ->
-                ManagerRouterActorTest(context, max)
+                ManagerRouterActorTest(context, max, null)
             }
         }
     }
 
     override fun createReceive(): Receive<Any> {
         return newReceiveBuilder()
-//                .onMessage<RMessage>(
-//                        RMessage::class.java
-//                ) { message: RMessage -> this.onCommand(message) }
+                .onMessage<RMessage>(
+                        RMessage::class.java
+                ) { message: RMessage -> this.onCommand(message) }
 //                .onMessage<CommonData>(
 //                        CommonData::class.java
 //                ) { res: CommonData -> this.onOtherCommand(res) }
-                .onMessage(String::class.java) {
-                    res: String -> this.testCommand(res)
+                .onMessage(String::class.java) { res: String ->
+                    this.testCommand(res)
                 }
                 .build()
     }
@@ -70,11 +75,13 @@ class ManagerRouterActorTest(
         return this
     }
 
-//    // 接受command命令，使用相应的策略分配给对应的子actor，并分配给子actor处理
-//    private fun onCommand(message: RMessage): Behavior<Any> {
-//        val (command, content, _ , _) = message
-//
-//         // 一些需要借助其他actor的命令，在此处定义
+    // 接受command命令，使用相应的策略分配给对应的子actor，并分配给子actor处理
+    private fun onCommand(message: RMessage): Behavior<Any> {
+        val (command, content, _, _) = message
+        // println("ManagerRouterActorTest onCommand: $command")
+        this.router!!.tell(message)
+
+        // 一些需要借助其他actor的命令，在此处定义
 //        if (command in rCommon.operationList) {
 //            for (child in childArray) {
 //                child.tell(CommonData(message, null))
@@ -84,17 +91,17 @@ class ManagerRouterActorTest(
 //            val key = (content.children()[1] as FullBulkStringRedisMessage).content().toString(CharsetUtil.CHARSET_UTF_8)
 //            StrategyUtil.scheduleActor(key, childArray).tell(message)
 //        }
-//        return this
-//    }
-//
+        return this
+    }
+
 //    private fun onOtherCommand(res: CommonData): Behavior<Any> {
 //        val (command, data) = res
 //        return this
 //    }
 }
 
-fun main(args: Array<String>) {
-    val managerActor: ActorSystem<Any> = ActorSystem.create(ManagerRouterActorTest.create(8), "ManagerRouterActorTest")
-    managerActor.tell("hello yy")
-}
+//fun main(args: Array<String>) {
+//    val managerActor: ActorSystem<Any> = ActorSystem.create(ManagerRouterActorTest.create(8), "ManagerRouterActorTest")
+//    managerActor.tell("hello yy")
+//}
 
