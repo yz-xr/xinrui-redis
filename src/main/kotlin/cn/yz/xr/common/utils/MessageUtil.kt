@@ -11,7 +11,7 @@ open class MessageUtil {
         /**
          * ArrayRedisMessage 转数组
          */
-        fun convertToArray(content: ArrayRedisMessage): List<String> {
+        inline fun convertToArray(content: ArrayRedisMessage): List<String> {
             val children = content.children()
             val res = mutableListOf<String>()
             for (o in children) {

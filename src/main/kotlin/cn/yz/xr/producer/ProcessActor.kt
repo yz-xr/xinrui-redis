@@ -25,8 +25,6 @@ class ProcessActor(
         private var rZSet: RZSet = RZSet()
 ) : AbstractBehavior<Any>(context) {
 
-    private val logger: Logger = LoggerFactory.getLogger(RedisServerHandler::class.java)
-
     companion object {
         fun create(father: ActorRef<Any>): Behavior<Any> {
             return Behaviors.setup { context: ActorContext<Any> ->
@@ -46,6 +44,9 @@ class ProcessActor(
                 .build()
     }
 
+    /**
+     * TODO:对一些需要多个actor的state信息的处理
+     */
     private fun otherProcess(commonData: CommonData):Behavior<Any>{
         val (rMessage,_) = commonData
         val (command,_,_,_) = rMessage

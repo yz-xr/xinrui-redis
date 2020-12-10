@@ -75,8 +75,8 @@ class RHash(
             val existedMap = listMap[array[1]]
             if (existedMap != null) {
                 for (i in 2 until array.size) {
-                    if (existedMap.containsKey(array[2])) {
-                        rmList.add(SimpleStringRedisMessage(existedMap[array[2]].toString()))
+                    if (existedMap.containsKey(array[i])) {
+                        rmList.add(SimpleStringRedisMessage(existedMap[array[i]].toString()))
                     } else {
                         rmList.add(SimpleStringRedisMessage("(nil)"))
                     }

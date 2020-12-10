@@ -68,7 +68,7 @@ class RString(
         if (end in 1 until start) {
             return SimpleStringRedisMessage("")
         }
-        var str = map[key] ?: ""
+        val str = map[key] ?: ""
         var s = start
         var e = end
         if (end < 0) {
@@ -77,7 +77,7 @@ class RString(
         if (start < 0) {
             s = str.length + start
         }
-        return SimpleStringRedisMessage(map[key] ?: "".substring(s, e))
+        return SimpleStringRedisMessage(map[key]?.substring(s, e))
     }
 
     private fun incrBy(key: String, increment: Int): RedisMessage {
@@ -106,11 +106,6 @@ class RString(
         return SimpleStringRedisMessage("${this.map[key]}")
     }
 
-//    fun keys(): Set<String> {
-//        return map.keys
-//    }
-
-    //fun operation(command: String, key: String, array: List<String>): RedisMessage {
     fun operation(command: String, key: String, array: List<String>): RedisMessage {
         return when (command) {
             "GET" -> get(key)

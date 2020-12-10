@@ -1,10 +1,7 @@
 package cn.yz.xr.common.entity
 
 import cn.yz.xr.common.utils.MessageUtil
-import io.netty.handler.codec.redis.ErrorRedisMessage
-import io.netty.handler.codec.redis.IntegerRedisMessage
-import io.netty.handler.codec.redis.RedisMessage
-import io.netty.handler.codec.redis.SimpleStringRedisMessage
+import io.netty.handler.codec.redis.*
 import java.lang.Exception
 import java.util.*
 
@@ -21,6 +18,9 @@ class RZSet(
     private val comparator = kotlin.Comparator{ node1:RNode, node2:RNode->node2.score-node1.score}
 
     fun ZAdd(array: List<String>):RedisMessage{
+        if(array.size < 4){
+            return ErrorRedisMessage("wrong number of arguments (given ${array.size}, expected 4)")
+        }
         var count = 0
         if(!zSet.containsKey(array[1])){
             this.zSet[array[1]] = sortedSetOf<RNode>(comparator)
@@ -32,23 +32,22 @@ class RZSet(
         return SimpleStringRedisMessage(count.toString())
     }
 
-    fun ZScore(array: List<String>):RedisMessage{
+    fun ZScore(array: List<String>):RedisMessage {
         // 参数数目校验
         val paramError: ErrorRedisMessage? = MessageUtil.checkArgsNum(array, 3)
 
-        return if(paramError==null){
+        if(paramError==null){
             if(this.zSet.containsKey(array[1])){
-                try{
-                    // 如果zSet中有
-                    SimpleStringRedisMessage(zSet[array[1]]?.first { it.member == array[2] }?.score.toString())
-                }catch (e:Exception){
-
+                for(o in zSet[array[1]]!!){
+                    if(o.member==array[2]){
+                        return SimpleStringRedisMessage(o.score.toString())
+                    }
                 }
             }
-            SimpleStringRedisMessage("(nil)")
         }else{
-            paramError
+            return paramError
         }
+        return SimpleStringRedisMessage("(nil)")
     }
 
     /**
@@ -145,37 +144,37 @@ class RZSet(
             var start = array[2].toInt()
             var end = array[3].toInt()
             val hasScore = array.size==5
-            if(this.zSet.containsKey(array[0])){
-                if(start > end || start > this.zSet[array[0]]?.size ?:0 ){
+            if(this.zSet.containsKey(array[1])){
+                if(start < 0){
+                    start += this.zSet[array[1]]?.size ?: 0
+                }
+                if(end < 0){
+                    end += this.zSet[array[1]]?.size ?: 0
+                }
+                if(start > end || start > this.zSet[array[1]]?.size ?:0 ){
                     SimpleStringRedisMessage("(empty list or set)")
                 }else{
                     if(start < 0){
-                        start += this.zSet[array[0]]?.size ?: 0
-                        if(start < 0){
-                            SimpleStringRedisMessage("(empty list or set)")
-                        }
+                        SimpleStringRedisMessage("(empty list or set)")
                     }
                     if(end < 0){
-                        end += this.zSet[array[0]]?.size ?: 0
-                        if(end < 0){
-                            SimpleStringRedisMessage("(empty list or set)")
-                        }
+                        SimpleStringRedisMessage("(empty list or set)")
                     }
                     var index = 0
                     var lineIndex = 1
-                    var output = ""
-                    for(i in this.zSet[array[0]]!!){
+                    val varList = mutableListOf<RedisMessage>()
+                    for(i in this.zSet[array[1]]!!){
                         if(index in start..end){
-                            output = "${lineIndex}) ${i.member}\n"
+                            varList.add(SimpleStringRedisMessage(i.member))
                             lineIndex+=1
                             if(hasScore){
-                                output = "${lineIndex}) ${i.score}\n"
+                                varList.add(SimpleStringRedisMessage(i.score.toString()))
                                 lineIndex+=1
                             }
                         }
                         index+=1
                     }
-                    SimpleStringRedisMessage(output)
+                    ArrayRedisMessage(varList)
                 }
             }else{
                 SimpleStringRedisMessage("(empty list or set)")
@@ -189,19 +188,19 @@ class RZSet(
         // 参数数目校验
         val paramError: ErrorRedisMessage? = MessageUtil.checkArgsNum(array, 3)
 
-        return if(paramError==null){
+        if(paramError==null){
             if(this.zSet.containsKey(array[1]) && this.zSet[array[1]]?.size ?: -1 > 0){
                 var count = 0
                 for(node in this.zSet[array[1]]!!){
                     if(node.member==array[2]){
-                        IntegerRedisMessage(count.toLong())
+                        return IntegerRedisMessage(count.toLong())
                     }
                     count+=1
                 }
             }
-            SimpleStringRedisMessage("(nil)")
+            return SimpleStringRedisMessage("(nil)")
         }else{
-            paramError
+            return paramError
         }
     }
 

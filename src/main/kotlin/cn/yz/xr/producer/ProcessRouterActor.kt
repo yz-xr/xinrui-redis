@@ -81,7 +81,7 @@ class ProcessRouterActor(
                     //println(rList.listMap)
                     this.rList.operation(type, arrays)
                 }
-                in this.rHash.operationList -> this.rHash.operation(type, arrayListOf())
+                in this.rHash.operationList -> this.rHash.operation(type, arrays)
                 in this.rSet.operationList -> this.rSet.operation(type, arrays)
                 in this.rZSet.operationList -> this.rZSet.operation(type, arrays)
                 else -> {
