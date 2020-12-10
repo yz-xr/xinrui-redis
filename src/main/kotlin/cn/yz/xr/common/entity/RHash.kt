@@ -40,6 +40,7 @@ class RHash(
 
     private fun hget(array: List<String>): RedisMessage {
         // 校验参数个数
+        println("before:  ${System.nanoTime()}")
         val paramError: ErrorRedisMessage? = MessageUtil.checkArgsNum(array, 3)
 
         if (paramError == null) {
@@ -49,6 +50,7 @@ class RHash(
                     if (existedMap.containsKey(array[2])) {
                         SimpleStringRedisMessage(existedMap[array[2]].toString())
                     } else {
+                        println("after:  ${System.nanoTime()}")
                         SimpleStringRedisMessage("(nil)")
                     }
                 } else {

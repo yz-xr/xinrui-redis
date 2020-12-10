@@ -7,6 +7,7 @@ import io.netty.handler.codec.redis.FullBulkStringRedisMessage
 
 open class MessageUtil {
     companion object {
+
         /**
          * ArrayRedisMessage 转数组
          */
@@ -39,7 +40,6 @@ open class MessageUtil {
                 ErrorRedisMessage("ERR value is not an integer or out of range")
             }
         }
-
 
     }
 }

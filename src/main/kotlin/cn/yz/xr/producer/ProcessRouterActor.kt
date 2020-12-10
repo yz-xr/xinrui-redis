@@ -10,6 +10,7 @@ import cn.yz.xr.common.entity.*
 import cn.yz.xr.common.entity.repo.RMessage
 import cn.yz.xr.common.utils.MessageUtil
 import cn.yz.xr.consumer.server.RedisServerHandler
+import cn.yz.xr.producer.communication.CommonData
 import io.netty.handler.codec.redis.ErrorRedisMessage
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -17,7 +18,7 @@ import org.slf4j.LoggerFactory
 /**
  * 子actor根据命令，将之分配给不同的对象进行处理
  */
-class ProcessActorRouterTest(
+class ProcessRouterActor(
         context: ActorContext<Any>,
         private var father: ActorRef<Any>,
         private var rString: RString = RString(),
@@ -32,7 +33,7 @@ class ProcessActorRouterTest(
     companion object {
         fun create(father: ActorRef<Any>): Behavior<Any> {
             return Behaviors.setup { context: ActorContext<Any> ->
-                ProcessActorRouterTest(context,father)
+                ProcessRouterActor(context, father)
             }
         }
     }
@@ -41,60 +42,52 @@ class ProcessActorRouterTest(
         return newReceiveBuilder()
                 .onMessage(
                         RMessage::class.java
-                ) { command: RMessage -> onProcess(command)}
-//                .onMessage(
-//                        CommonData::class.java
-//                ){commonData:CommonData -> otherProcess(commonData)}
-                .onMessage(String::class.java) {
-                    str: String -> onStringProcess(str)
-                }
+                ) { command: RMessage -> onProcess(command) }
+                .onMessage(
+                        CommonData::class.java
+                ) { commonData: CommonData -> otherProcess(commonData) }
                 .build()
     }
 
-    private fun onStringProcess(str: String): Behavior<Any>? {
-        println("children After Handler: $str === my ref is ${context.self}" )
+    private fun otherProcess(commonData: CommonData): Behavior<Any> {
+
+        val (rMessage, _) = commonData
+        val (command, _, _, _) = rMessage
+        val res = when (command) {
+            "KEYS" -> rList.listMap.keys.union(rHash.listMap.keys).union(rSet.rset.keys)
+            else -> ""
+        }
+        father.tell(CommonData(rMessage, res))
         return this
     }
 
-//    private fun otherProcess(commonData: CommonData):Behavior<Any>{
-//        val (rMessage,_) = commonData
-//        val (command,_,_,_) = rMessage
-//        val res = when(command){
-//            "KEYS" -> rList.listMap.keys.union(rHash.listMap.keys).union(rSet.rset.keys)
-//            else -> ""
-//        }
-//        father.tell(CommonData(rMessage,res))
-//        return this
-//    }
-
-
     private fun onProcess(message: RMessage): Behavior<Any> {
-        logger.info("children actor: {}", context.toString())
+        // logger.info("children actor: {}", context.toString())
 
-        val (command, content, channel, _) = message
+        val (command, key, content, channel, _) = message
         val arrays = MessageUtil.convertToArray(content)
         val type = command.toUpperCase()
         //println("ProcessActorRouterTest arrays: $arrays")
         //println("ProcessActorRouterTest type: $type")
-
-        if(judgeRepetition(type,arrays)){
+        if (judgeRepetition(type, arrays)) {
             channel.writeAndFlush(ErrorRedisMessage("WRONGTYPE Operation against a key holding the wrong kind of value"))
-        }else{
+        } else {
             val response = when (type) {
-                in this.rString.operationList -> this.rString.operation(type, arrays)
+                in this.rString.operationList -> {
+                    //println("akka end time: ${System.currentTimeMillis()}")
+                    this.rString.operation(type, key, arrays)
+                }
                 in this.rList.operationList -> {
-                    println(rList.listMap)
+                    //println(rList.listMap)
                     this.rList.operation(type, arrays)
                 }
-                in this.rHash.operationList -> this.rHash.operation(type, arrays)
+                in this.rHash.operationList -> this.rHash.operation(type, arrayListOf())
                 in this.rSet.operationList -> this.rSet.operation(type, arrays)
                 in this.rZSet.operationList -> this.rZSet.operation(type, arrays)
                 else -> {
-                    // 不匹配
-                    ErrorRedisMessage("I'm sorry, I don't recognize that command.")
+                    ErrorRedisMessage("I'm sorry, I don't recognize that command.") // 不匹配
                 }
             }
-            //val fullBulkStringRedisMessage = FullBulkStringRedisMessage(ByteBufUtil.writeUtf8(channel.alloc(), response))
             channel.writeAndFlush(response)
         }
         return this

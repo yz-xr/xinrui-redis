@@ -13,6 +13,7 @@ import io.netty.handler.codec.redis.ArrayRedisMessage
  */
 data class RMessage(
         val command: String,
+        val Key: String,
         val content: ArrayRedisMessage,
         val channel: ChannelHandlerContext,
         val timeStamp: Long = System.currentTimeMillis()

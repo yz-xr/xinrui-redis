@@ -10,7 +10,9 @@ import cn.yz.xr.common.entity.RCommon
 import cn.yz.xr.common.entity.repo.RMessage
 import cn.yz.xr.common.utils.StrategyUtil
 import cn.yz.xr.producer.communication.CommonData
+import io.netty.handler.codec.redis.ArrayRedisMessage
 import io.netty.handler.codec.redis.FullBulkStringRedisMessage
+import io.netty.handler.codec.redis.RedisMessage
 
 
 /**
@@ -50,7 +52,7 @@ class ManagerActor(
 
     // 接受command命令，使用相应的策略分配给对应的子actor，并分配给子actor处理
     private fun onCommand(message: RMessage): Behavior<Any> {
-        val (command, content, _, _) = message
+        val (command, key, content, _, _) = message
         // 一些需要借助其他actor的命令，在此处定义
         if(command in rCommon.operationList){
             for(child in childArray){
@@ -58,7 +60,6 @@ class ManagerActor(
                 context.watchWith(child, CommonData(message, null))
             }
         }else{
-            val key = (content.children()[1] as FullBulkStringRedisMessage).content().toString(CharsetUtil.CHARSET_UTF_8)
             StrategyUtil.scheduleActor(key,childArray).tell(message)
         }
         return this
