@@ -1,13 +1,13 @@
 package cn.yz.xr.common.entity
 
-import com.typesafe.config.ConfigException
 import io.netty.handler.codec.redis.*
-import sun.plugin.javascript.navig.Link
-import sun.security.ec.point.ProjectivePoint
 import kotlin.math.absoluteValue
 import kotlin.collections.MutableSet as MutableSet1
 import kotlin.collections.setOf as setOf1
 
+/**
+ * @author adc
+ */
 class RSet(
         var rset: HashMap<String, MutableSet1<String>> = hashMapOf(),
         var operationList: List<String> = listOf("SADD",
