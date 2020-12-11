@@ -5,6 +5,10 @@ import io.netty.handler.codec.redis.IntegerRedisMessage
 import io.netty.handler.codec.redis.RedisMessage
 import io.netty.handler.codec.redis.SimpleStringRedisMessage
 
+/**
+ * author：雷克萨
+ */
+
 class RString(
         var map: HashMap<String, String> = hashMapOf(),
         var operationList: List<String> = listOf("SET", "GET", "SETNX", "GETSET", "STRLEN", "APPEND", "SETRANGE", "INCR", "GETRANGE", "INCRBY", "INCRBYFLOAT", "DECR", "DECRBY")
