@@ -5,6 +5,7 @@ import io.netty.handler.codec.redis.ArrayRedisMessage
 
 /**
  * Redis server 与 akka 交互数据结构
+ * @author lewy
  *
  * command : 命令
  * key : 键值

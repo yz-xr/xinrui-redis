@@ -11,6 +11,7 @@ import java.util.function.Function
 
 /**
  * 父子actor，8个并行子actor，使用Router
+ * @author lewy
  */
 class ManagerRouterActor(
         context: ActorContext<Any>,

@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory
 
 /**
  * 子actor根据命令，将之分配给不同的对象进行处理
+ * @author lewy
  */
 class ProcessRouterActor(
         context: ActorContext<Any>,

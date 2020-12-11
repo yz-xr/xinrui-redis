@@ -13,6 +13,7 @@ import io.netty.handler.codec.redis.ErrorRedisMessage
 
 /**
  * 单 actor 实例，无并行子 actor 的情况
+ * @author lewy
  */
 class ManagerActorSingle(
         context: ActorContext<Any>,

@@ -16,6 +16,9 @@ import java.util.concurrent.ConcurrentHashMap
 import kotlin.jvm.Throws
 import kotlin.collections.HashMap
 
+/**
+ * @author adc & lewy
+ */
 class RedisServerHandler : ChannelDuplexHandler() {
 
     private val logger: Logger = LoggerFactory.getLogger(RedisServerHandler::class.java)
@@ -40,6 +43,7 @@ class RedisServerHandler : ChannelDuplexHandler() {
 
     /**
      * 调用 Akka
+     * @author lewy
      */
     private fun invokeAkka(ctx: ChannelHandlerContext, message: ArrayRedisMessage) {
         val command = (message.children()[0] as FullBulkStringRedisMessage).content().toString(CharsetUtil.CHARSET_UTF_8)
@@ -89,6 +93,7 @@ class RedisServerHandler : ChannelDuplexHandler() {
 
     /**
      * 自定义实现逻辑（不使用）
+     * @author lewy
      */
 //    private fun printAggregatedRedisResponseRequest(message: ArrayRedisMessage): Any {
 //        when ((message.children()[0] as FullBulkStringRedisMessage).content().toString(CharsetUtil.CHARSET_UTF_8)) {

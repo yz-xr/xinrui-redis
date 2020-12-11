@@ -5,6 +5,10 @@ import io.netty.handler.codec.redis.ArrayRedisMessage
 import io.netty.handler.codec.redis.ErrorRedisMessage
 import io.netty.handler.codec.redis.FullBulkStringRedisMessage
 
+/**
+ * 消息通信工具类
+ * @author: lewy
+ */
 open class MessageUtil {
     companion object {
 
