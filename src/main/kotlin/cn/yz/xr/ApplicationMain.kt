@@ -3,7 +3,6 @@ package cn.yz.xr
 import akka.actor.typed.ActorSystem
 import cn.yz.xr.consumer.server.RedisServerApp
 import cn.yz.xr.producer.ManagerActor
-import cn.yz.xr.producer.ManagerRouterActor
 import java.util.*
 
 /**
@@ -49,6 +48,7 @@ class ApplicationMain {
         // 测试3 ： 父子actor，8个子actor并行，引入Router，由router根据key取模（一致性hash协议）进行分发
         // val managerActor: ActorSystem<Any> = ActorSystem.create(ManagerRouterActor.create(8), "ManagerRouterActor")
         // 测试4： 8个并行actor，直接在netty端完成根据取模找到对应的actor完成分发
+        // 待实现
 
     }
 }

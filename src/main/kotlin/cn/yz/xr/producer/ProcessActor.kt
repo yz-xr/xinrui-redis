@@ -69,10 +69,7 @@ class ProcessActor(
         }else{
             val response = when (type) {
                 in this.rString.operationList -> this.rString.operation(type, key, arrays)
-                in this.rList.operationList -> {
-                    println(rList.listMap)
-                    this.rList.operation(type, arrays)
-                }
+                in this.rList.operationList -> this.rList.operation(type, arrays)
                 in this.rHash.operationList -> this.rHash.operation(type, arrays)
                 in this.rSet.operationList -> this.rSet.operation(type, arrays)
                 in this.rZSet.operationList -> this.rZSet.operation(type, arrays)
