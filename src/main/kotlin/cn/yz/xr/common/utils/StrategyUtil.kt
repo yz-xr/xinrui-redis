@@ -3,6 +3,10 @@ package cn.yz.xr.common.utils
 import akka.actor.typed.ActorRef
 import kotlin.math.abs
 
+/**
+ * author:雷克萨
+ */
+
 class StrategyUtil{
     companion object{
         /**

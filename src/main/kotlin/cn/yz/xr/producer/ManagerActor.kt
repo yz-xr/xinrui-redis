@@ -10,6 +10,7 @@ import cn.yz.xr.producer.communication.CommonData
 
 
 /**
+ * author:雷克萨
  * 父actor负责接受Netty的命令，并将命令分配给子actor执行
  */
 class ManagerActor(

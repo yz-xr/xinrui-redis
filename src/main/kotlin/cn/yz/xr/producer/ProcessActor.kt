@@ -13,6 +13,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 /**
+ * author：雷克萨
  * 子actor根据命令，将之分配给不同的对象进行处理
  */
 class ProcessActor(

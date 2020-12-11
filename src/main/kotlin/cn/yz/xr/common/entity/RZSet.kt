@@ -5,6 +5,9 @@ import io.netty.handler.codec.redis.*
 import java.lang.Exception
 import java.util.*
 
+/**
+ * author：雷克萨
+ */
 class RNode(var score:Int, var member:String):Comparable<RNode>{
     override fun compareTo(other: RNode): Int {
         return this.score - other.score

@@ -5,6 +5,10 @@ import io.netty.handler.codec.redis.ErrorRedisMessage
 import io.netty.handler.codec.redis.RedisMessage
 import io.netty.handler.codec.redis.SimpleStringRedisMessage
 
+/**
+ * author：雷克萨
+ */
+
 class RCommon(
         var operationList:List<String> = listOf("KEYS","MSET","MGET","SETNX")
 ){
