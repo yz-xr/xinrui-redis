@@ -3,6 +3,10 @@ package cn.yz.xr.common.entity
 import cn.yz.xr.common.utils.MessageUtil
 import io.netty.handler.codec.redis.*
 
+/**
+ * hash 相关命令实现
+ * @author: lewy
+ */
 class RHash(
         var listMap: MutableMap<String, MutableMap<String, Any>> = mutableMapOf<String, MutableMap<String, Any>>(),
         val operationList: List<String> = listOf("HSET", "HGET", "HGETALL", "HDEL", "HSETNX", "HLEN", "HMSET", "HMGET", "HINCRBY", "HEXISTS")

@@ -4,6 +4,10 @@ import cn.yz.xr.common.utils.MessageUtil
 import io.netty.handler.codec.redis.*
 import kotlin.math.absoluteValue
 
+/**
+ * list 相关命令实现
+ * @author: lewy
+ */
 class RList(
         var listMap: MutableMap<String, ArrayDeque<String>> = mutableMapOf(),
         var operationList: List<String> = listOf("LSET", "LPUSH", "LPOP", "RPUSH", "RPOP", "LLEN", "LINDEX", "LRANGE", "LREM")
