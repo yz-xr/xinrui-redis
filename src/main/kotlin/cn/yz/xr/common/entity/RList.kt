@@ -266,9 +266,9 @@ class RList(
                             count > 0 -> {
                                 // count > 0 : 从表头开始向表尾搜索，移除与 VALUE 相等的元素，数量为 COUNT
                                 var num = 0
-                                existedDeque.forEach {
-                                    if (it == array[3] && num < count) {
-                                        existedDeque.remove(it)
+                                for (i in 0 until count) {
+                                    if (existedDeque.contains(array[3])) {
+                                        existedDeque.remove(array[3])
                                         num++
                                     }
                                 }
@@ -278,9 +278,9 @@ class RList(
                                 // count < 0 : 从表尾开始向表头搜索，移除与 VALUE 相等的元素，数量为 COUNT 的绝对值
                                 var num = 0
                                 val existedDequeReversed = existedDeque.asReversed()
-                                existedDequeReversed.reversed().forEach {
-                                    if (it == array[3] && num < count.absoluteValue) {
-                                        existedDequeReversed.remove(it)
+                                for (i in 0 until count) {
+                                    if (existedDeque.contains(array[3])) {
+                                        existedDeque.remove(array[3])
                                         num++
                                     }
                                 }
